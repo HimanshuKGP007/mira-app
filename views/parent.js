@@ -14,6 +14,7 @@ import { store, lifetime } from '../core/rewards.js';
 import { LEVELS } from '../core/exercise.js';
 import { feedbackForSession } from '../core/policy.js';
 import { OPERATING_POINT, SVARAH } from '../core/policy.js';
+import { config } from '../core/client.js';
 
 const $ = s => document.querySelector(s);
 
@@ -37,17 +38,54 @@ export function render() {
         <div class="note">No practice sessions yet. Once ${name} finishes a trail,
         this page shows what was measured — and, just as importantly, what Mira declined to judge.</div>
       </div>${aboutCard()}`;
+    bindTechnicalToggle();
     return;
   }
 
   body.innerHTML = `
     ${lastSessionCard(last, name)}
+    ${insightsCardShell()}
     ${positionCard(agg)}
     ${rewardCard()}
     ${trophyCard()}
     ${aboutCard(last.scorer)}`;
 
   bindReward();
+  bindTechnicalToggle();
+  loadInsights(last.targetPhone || 's');
+}
+
+/* --- SLM insights: a live note over numbers already shown above ---------- */
+function insightsCardShell() {
+  return `
+  <div class="card" id="insightsCard">
+    <h3>${icon('bulb')}Progress note</h3>
+    <div class="note" id="insightsBody">Putting together a note on recent practice&hellip;</div>
+  </div>`;
+}
+
+async function loadInsights(targetPhone) {
+  const el = $('#insightsBody');
+  if (!el) return;
+  try {
+    const res = await fetch(`${config.endpoint}/insights`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        child_name: store.name || null,
+        target_phone: targetPhone,
+        sessions: store.sessions,
+      }),
+    });
+    if (!res.ok) throw new Error('bad status');
+    const data = await res.json();
+    el.textContent = data.text;
+  } catch {
+    // The tickers above already show the real numbers; losing the note is
+    // a cosmetic failure, never a blocking one.
+    const body = $('#insightsCard');
+    if (body) body.remove();
+  }
 }
 
 /* --- last session: the scored / not-scored pair leads ---------------------- */
@@ -164,7 +202,7 @@ function trophyCard() {
   </div>`;
 }
 
-/* --- the honest limits, stated plainly ----------------------------------- */
+/* --- the honest limits, plain version up front, technical detail on tap -- */
 function aboutCard(scorer) {
   const baseline = scorer && scorer.tier === 'gop_baseline';
   return `
@@ -180,24 +218,41 @@ function aboutCard(scorer) {
       Mira is a practice aid, not an assessment. It does not diagnose, does not rate severity,
       and does not decide what to work on next — a speech-language pathologist does that.
     </div>
-    ${scorer ? `
-    <div class="note" style="margin-top:10px">
-      <b>Scorer:</b> ${scorer.tier === 'gop_baseline' ? 'goodness-of-pronunciation baseline' : scorer.tier}.
-      ${baseline ? `Its ability to tell a good production from a poor one measures
-      <b>${scorer.expected_auc}</b> (where 0.5 is a coin toss and 1.0 is perfect).
-      A stronger version of this model reaches 0.843 but is not installed.` : ''}
-      ${scorer.calibrated === false ? `Confidence values here are raw model output and are
-      <b>not calibrated</b> — treat them as a ranking, not a probability.` : ''}
-    </div>` : ''}
-    <div class="note" style="margin-top:9px;font-size:12px;color:var(--ink-faint)">
-      The underlying approach was tested on ${SVARAH.nUtterances.toLocaleString()} Indian-English
-      recordings across 17 states and showed no accent penalty — it flagged
-      ${(SVARAH.flagRate * 100).toFixed(1)}% of sounds, below its own
-      ${(SVARAH.ownNoiseFloor * 100).toFixed(1)}% baseline. Figures for the fully trained
-      version: detection ${(OPERATING_POINT.recallOnPoor * 100).toFixed(1)}%,
-      false alarms ${(OPERATING_POINT.falsePositiveRate * 100).toFixed(1)}%.
+    <button class="btn-ghost" id="toggleTechnical" style="width:100%;margin-top:11px">Show technical details</button>
+    <div class="note" id="technicalDetails" style="margin-top:10px;display:none">
+      ${scorer ? `
+      <div>
+        <b>Scorer:</b> ${scorer.tier === 'gop_baseline' ? 'goodness-of-pronunciation baseline' : scorer.tier}.
+        ${baseline ? `Its ability to tell a good production from a poor one measures
+        <b>${scorer.expected_auc}</b> (where 0.5 is a coin toss and 1.0 is perfect).
+        A stronger version of this model reaches 0.843 but is not installed.` : ''}
+        ${scorer.calibrated === false ? `Confidence values here are raw model output and are
+        <b>not calibrated</b> — treat them as a ranking, not a probability.` : ''}
+      </div>` : ''}
+      <div style="margin-top:9px;font-size:12px;color:var(--ink-faint)">
+        The underlying approach was tested on ${SVARAH.nUtterances.toLocaleString()} Indian-English
+        recordings across 17 states and showed no accent penalty — it flagged
+        ${(SVARAH.flagRate * 100).toFixed(1)}% of sounds, below its own
+        ${(SVARAH.ownNoiseFloor * 100).toFixed(1)}% baseline. Figures for the fully trained
+        version: detection ${(OPERATING_POINT.recallOnPoor * 100).toFixed(1)}%,
+        false alarms ${(OPERATING_POINT.falsePositiveRate * 100).toFixed(1)}%.
+      </div>
+      <div style="margin-top:9px;font-size:12px;color:var(--ink-faint)">
+        Full technical detail, per-word scores and provenance live in the clinician tab.
+      </div>
     </div>
   </div>`;
+}
+
+function bindTechnicalToggle() {
+  const btn = $('#toggleTechnical');
+  const panel = $('#technicalDetails');
+  if (!btn || !panel) return;
+  btn.addEventListener('click', () => {
+    const show = panel.style.display === 'none';
+    panel.style.display = show ? 'block' : 'none';
+    btn.textContent = show ? 'Hide technical details' : 'Show technical details';
+  });
 }
 
 function escapeHtml(s) {

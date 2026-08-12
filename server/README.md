@@ -148,3 +148,42 @@ limits are stated in every response and on both adult screens.
 | `MIRA_MODEL_ID` | `facebook/wav2vec2-lv-60-espeak-cv-ft` | acoustic model |
 | `MIRA_FLAG_THRESHOLD` | `0.50` | **uncalibrated** — tune on your own data |
 | `MIRA_MIN_SNR_DB` | `12.0` | retry below this |
+| `GROQ_API_KEY` | unset | optional. Powers the `/insights` narration; without it, that endpoint falls back to a template sentence built from the same numbers. Never required for scoring. Put it in `server/.env` (copy `.env.example`), which is gitignored — never commit a real key. |
+
+---
+
+## Manual calibration (`calibrate.py`)
+
+`MIRA_FLAG_THRESHOLD` is the one number that separates `correct` from
+`substituted`. It ships uncalibrated (see above), so before a demo, check it
+against real recordings instead of trusting the default:
+
+1. Record a handful of takes of your demo words — some said correctly, some
+   deliberately wrong. Name them `<word>__correct__1.wav`, `<word>__wrong__1.wav`, etc.
+2. `cd server && python calibrate.py path/to/recordings/`
+3. It prints the confidence each take scored and tells you whether
+   `correct`/`wrong` takes separate cleanly at the current threshold, and if
+   not, what value would. Set `MIRA_FLAG_THRESHOLD` to that and restart.
+
+No model weights change — this is picking a number, not training.
+
+---
+
+## `POST /insights`
+
+Body: `{"child_name": str|null, "target_phone": "s", "sessions": [...]}` where
+`sessions` is `store.sessions` from `core/rewards.js`, oldest first — the same
+session history the parent screen's tickers are already built from.
+
+Computes ordinary aggregate figures (accuracy %, by word position, trend
+across sessions — `insights.compute_analysis`, no model involved) and, if
+`GROQ_API_KEY` is set, asks Groq for 2-3 sentences describing *only* those
+numbers. The response is screened for clinical-claim language before it's
+returned; any failure — no key, network error, timeout, a forbidden word —
+falls back to a template sentence built from the same figures. The parent
+screen's tickers never depend on this endpoint; only the one narration card
+does, and it hides itself if the call fails outright.
+
+```json
+{ "text": "...", "source": "llm", "analysis": { "...": "the numbers behind it" } }
+```

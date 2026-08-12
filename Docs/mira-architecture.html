@@ -1,0 +1,365 @@
+<title>Mira — how it actually works</title>
+<style>
+  :root{
+    --paper:#F1F4F6; --paper-2:#FFFFFF; --ink:#10171D; --ink-soft:#45505B;
+    --line:#D7DEE3; --accent:#1E8C8A; --accent-soft:#E4F1F0;
+    --good:#3F8F5A; --good-soft:#E7F3EA; --warn:#C97A2E; --warn-soft:#FBEEE0;
+    --muted:#7A8194; --muted-soft:#EDEEF2;
+    --font-mono: ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --font-sans: ui-sans-serif,-apple-system,"Segoe UI",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#0E1418; --paper-2:#141B21; --ink:#E7ECEF; --ink-soft:#A9B4BD;
+      --line:#26313A; --accent:#4FC7C2; --accent-soft:#16302E;
+      --good:#59B37B; --good-soft:#123321; --warn:#E0A257; --warn-soft:#38260F;
+      --muted:#8B93A6; --muted-soft:#1C222B;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#0E1418; --paper-2:#141B21; --ink:#E7ECEF; --ink-soft:#A9B4BD;
+    --line:#26313A; --accent:#4FC7C2; --accent-soft:#16302E;
+    --good:#59B37B; --good-soft:#123321; --warn:#E0A257; --warn-soft:#38260F;
+    --muted:#8B93A6; --muted-soft:#1C222B;
+  }
+
+  *{box-sizing:border-box}
+  body{
+    background:var(--paper); color:var(--ink); font-family:var(--font-sans);
+    margin:0; padding:0 20px 90px; line-height:1.55;
+  }
+  main{max-width:920px; margin:0 auto}
+
+  header{padding:56px 0 28px; border-bottom:1px solid var(--line)}
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  h1{
+    font-family:var(--font-mono); font-size:clamp(28px,4vw,40px); margin:0 0 16px;
+    text-wrap:balance; letter-spacing:-.01em; font-weight:600;
+  }
+  .lede{font-size:17px; color:var(--ink-soft); max-width:64ch; margin:0}
+  .lede b{color:var(--ink); font-weight:600}
+
+  section{margin-top:56px}
+  h2{
+    font-family:var(--font-mono); font-size:14px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-soft); margin:0 0 22px;
+    display:flex; align-items:center; gap:12px;
+  }
+  h2::after{content:""; flex:1; height:1px; background:var(--line)}
+  h3{font-family:var(--font-mono); font-size:16px; margin:0 0 8px; font-weight:600}
+  p{margin:0 0 12px; max-width:66ch}
+  .prose p:last-child{margin-bottom:0}
+
+  /* --- diagram --- */
+  figure{margin:0}
+  .diagram-frame{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:10px;
+    padding:18px; overflow-x:auto;
+  }
+  svg{max-width:100%; height:auto; display:block; min-width:640px}
+  figcaption{
+    margin-top:14px; font-size:13.5px; color:var(--ink-soft); max-width:70ch;
+  }
+  .legend{
+    display:flex; gap:22px; flex-wrap:wrap; margin-top:14px; font-size:12.5px;
+    font-family:var(--font-mono); color:var(--ink-soft);
+  }
+  .legend span{display:inline-flex; align-items:center; gap:7px}
+  .swatch{width:14px; height:3px; display:inline-block; border-radius:2px}
+
+  /* --- stage cards --- */
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px}
+  .card{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:10px;
+    padding:18px 20px;
+  }
+  .card .tag{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.05em;
+    text-transform:uppercase; color:var(--accent); margin-bottom:8px; display:block;
+  }
+  .card p{font-size:14.5px; color:var(--ink-soft); margin-bottom:8px}
+  .card .tech{
+    font-family:var(--font-mono); font-size:12.5px; color:var(--ink);
+    background:var(--muted-soft); border-radius:6px; padding:8px 10px; margin-top:10px;
+  }
+
+  /* --- tables --- */
+  .table-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px}
+  table{width:100%; border-collapse:collapse; min-width:560px; background:var(--paper-2)}
+  th,td{text-align:left; padding:11px 16px; font-size:14px; border-bottom:1px solid var(--line)}
+  th{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-soft); font-weight:600;
+    background:var(--muted-soft);
+  }
+  tr:last-child td{border-bottom:none}
+  td.mono, th.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums}
+
+  .status{
+    display:inline-block; font-family:var(--font-mono); font-size:11.5px;
+    padding:3px 9px; border-radius:5px; letter-spacing:.02em;
+  }
+  .status.validated{background:var(--good-soft); color:var(--good)}
+  .status.wired{background:var(--accent-soft); color:var(--accent)}
+  .status.template{background:var(--warn-soft); color:var(--warn)}
+  .status.absent{background:var(--muted-soft); color:var(--muted)}
+
+  /* --- security list --- */
+  .layers{list-style:none; margin:0; padding:0; display:grid; gap:12px}
+  .layers li{
+    display:grid; grid-template-columns:28px 1fr; gap:14px; align-items:start;
+    background:var(--paper-2); border:1px solid var(--line); border-radius:10px;
+    padding:14px 18px;
+  }
+  .layers .n{
+    font-family:var(--font-mono); font-size:12px; color:var(--accent);
+    background:var(--accent-soft); border-radius:6px; width:28px; height:28px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .layers b{display:block; font-size:14.5px; margin-bottom:2px}
+  .layers span{font-size:13.5px; color:var(--ink-soft)}
+
+  footer{
+    margin-top:70px; padding-top:22px; border-top:1px solid var(--line);
+    font-size:12.5px; color:var(--muted); font-family:var(--font-mono);
+  }
+</style>
+
+<main>
+  <header>
+    <p class="eyebrow">Mira — engineering reference</p>
+    <h1>What the app actually does, end to end</h1>
+    <p class="lede">In plain terms: a child says a word, the app decides <b>correct</b> or
+      <b>mispronounced</b> for each sound in it, and everything a parent sees is built from
+      that — on the device, with the one optional cloud step never touching audio.</p>
+  </header>
+
+  <section>
+    <h2>The live data flow</h2>
+    <figure>
+      <div class="diagram-frame">
+        <svg viewBox="0 0 1040 400" role="img"
+             aria-label="Two-row diagram. Top row: a child's recording moves from the browser microphone to the local server's scoring pipeline (decode and gate, wav2vec2 CTC model, forced alignment, GOP scoring and marking) and back as a marking, then is written to browser localStorage. Bottom row: that stored session history is sent to a second local server endpoint, which computes plain arithmetic and optionally calls the Groq cloud LLM with numbers only before returning a verified sentence, or falls back to a template if Groq is unavailable, ending on the parent screen.">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+            </marker>
+            <marker id="arrowAccent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)"/>
+            </marker>
+          </defs>
+
+          <g font-family="var(--font-mono)" font-size="12" fill="currentColor">
+
+            <!-- ROW A: capture + scoring -->
+            <rect x="10" y="34" width="120" height="56" rx="8" fill="none" stroke="currentColor" opacity="0.8"/>
+            <text x="70" y="58" text-anchor="middle" font-weight="600">Mic</text>
+            <text x="70" y="74" text-anchor="middle" font-size="10.5" opacity="0.7">core/capture.js</text>
+
+            <line x1="130" y1="62" x2="176" y2="62" stroke="currentColor" opacity="0.7" marker-end="url(#arrow)"/>
+            <text x="153" y="52" text-anchor="middle" font-size="10.5" opacity="0.8">wav blob</text>
+
+            <!-- compound server box -->
+            <rect x="178" y="12" width="470" height="100" rx="8" fill="none" stroke="currentColor" opacity="0.45" stroke-dasharray="2 3"/>
+            <text x="413" y="28" text-anchor="middle" font-size="10.5" opacity="0.7">server /score — local, no network</text>
+
+            <g>
+              <rect x="190" y="42" width="98" height="48" rx="6" fill="none" stroke="currentColor" opacity="0.8"/>
+              <text x="239" y="62" text-anchor="middle" font-size="10.8">decode</text>
+              <text x="239" y="76" text-anchor="middle" font-size="10.8">+ gate</text>
+            </g>
+            <line x1="288" y1="66" x2="300" y2="66" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+            <g>
+              <rect x="302" y="42" width="98" height="48" rx="6" fill="none" stroke="currentColor" opacity="0.8"/>
+              <text x="351" y="62" text-anchor="middle" font-size="10.8">wav2vec2</text>
+              <text x="351" y="76" text-anchor="middle" font-size="10.8">CTC pass</text>
+            </g>
+            <line x1="400" y1="66" x2="412" y2="66" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+            <g>
+              <rect x="414" y="42" width="98" height="48" rx="6" fill="none" stroke="currentColor" opacity="0.8"/>
+              <text x="463" y="62" text-anchor="middle" font-size="10.8">forced</text>
+              <text x="463" y="76" text-anchor="middle" font-size="10.8">alignment</text>
+            </g>
+            <line x1="512" y1="66" x2="524" y2="66" stroke="currentColor" opacity="0.6" marker-end="url(#arrow)"/>
+            <g>
+              <rect x="526" y="42" width="112" height="48" rx="6" fill="none" stroke="currentColor" opacity="0.8"/>
+              <text x="582" y="62" text-anchor="middle" font-size="10.8">GOP score</text>
+              <text x="582" y="76" text-anchor="middle" font-size="10.8">→ marking</text>
+            </g>
+
+            <line x1="648" y1="62" x2="700" y2="62" stroke="currentColor" opacity="0.7" marker-end="url(#arrow)"/>
+            <text x="674" y="20" text-anchor="middle" font-size="9.5" opacity="0.8">JSON: marking,</text>
+            <text x="674" y="30" text-anchor="middle" font-size="9.5" opacity="0.8">confidence, substitute</text>
+
+            <rect x="702" y="34" width="130" height="56" rx="8" fill="none" stroke="currentColor" opacity="0.75"/>
+            <text x="767" y="58" text-anchor="middle" font-weight="600">Kid screen</text>
+            <text x="767" y="74" text-anchor="middle" font-size="10.5" opacity="0.7">star / crown</text>
+
+            <!-- down to store, right-angled so the arrow actually lands on the box -->
+            <line x1="767" y1="90" x2="767" y2="170" stroke="currentColor" opacity="0.7"/>
+            <line x1="767" y1="170" x2="622" y2="170" stroke="currentColor" opacity="0.7" marker-end="url(#arrow)"/>
+            <text x="778" y="106" text-anchor="start" font-size="9.5" opacity="0.8">writes session record</text>
+
+            <!-- STORE -->
+            <rect x="420" y="170" width="200" height="56" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.9"/>
+            <text x="520" y="194" text-anchor="middle" font-weight="600">Session history</text>
+            <text x="520" y="210" text-anchor="middle" font-size="10" opacity="0.75">localStorage — no server DB</text>
+
+            <!-- ROW B: insights -->
+            <line x1="480" y1="226" x2="382" y2="271" stroke="currentColor" opacity="0.7" marker-end="url(#arrow)"/>
+            <text x="330" y="244" text-anchor="middle" font-size="9.5" opacity="0.8">POST /insights:</text>
+            <text x="330" y="256" text-anchor="middle" font-size="9.5" opacity="0.8">full session history</text>
+
+            <rect x="188" y="272" width="200" height="56" rx="8" fill="none" stroke="currentColor" opacity="0.75"/>
+            <text x="288" y="294" text-anchor="middle" font-weight="600">server /insights</text>
+            <text x="288" y="310" text-anchor="middle" font-size="10.5" opacity="0.7">compute_analysis() — arithmetic</text>
+
+            <!-- fallback path -->
+            <line x1="388" y1="316" x2="466" y2="316" stroke="currentColor" opacity="0.55" stroke-dasharray="3 4" marker-end="url(#arrow)"/>
+            <text x="427" y="330" text-anchor="middle" font-size="9.5" opacity="0.7">no key / timeout</text>
+
+            <!-- groq accent path — parked clear of every other box (right edge,
+                 above Store), reached only by right-angle elbows so it can never
+                 overlap Store, Kid screen, or the writes-session-record line -->
+            <rect x="860" y="120" width="160" height="56" rx="8" fill="none" stroke="var(--accent)" stroke-width="1.4"/>
+            <text x="940" y="143" text-anchor="middle" font-weight="600" fill="var(--accent)">Groq LLM · cloud</text>
+            <text x="940" y="159" text-anchor="middle" font-size="10" fill="var(--accent)" opacity="0.85">llama-3.1-8b-instant</text>
+
+            <polyline points="330,272 330,145 860,145" fill="none" stroke="var(--accent)" stroke-dasharray="3 4" marker-end="url(#arrowAccent)"/>
+            <text x="595" y="135" text-anchor="middle" font-size="10" fill="var(--accent)">numbers only, never audio →</text>
+
+            <polyline points="860,163 571,163 571,272" fill="none" stroke="var(--accent)" stroke-dasharray="3 4" marker-end="url(#arrowAccent)"/>
+            <text x="715" y="153" text-anchor="middle" font-size="10" fill="var(--accent)">← 2-3 sentences</text>
+
+            <rect x="466" y="272" width="210" height="56" rx="8" fill="none" stroke="currentColor" opacity="0.75"/>
+            <text x="571" y="292" text-anchor="middle" font-weight="600">verify</text>
+            <text x="571" y="308" text-anchor="middle" font-size="9.5" opacity="0.75">checks the numbers,</text>
+            <text x="571" y="319" text-anchor="middle" font-size="9.5" opacity="0.75">screens forbidden words</text>
+
+            <line x1="676" y1="300" x2="722" y2="300" stroke="currentColor" opacity="0.7" marker-end="url(#arrow)"/>
+            <text x="699" y="290" text-anchor="middle" font-size="9.5" opacity="0.8">text, source</text>
+
+            <rect x="724" y="272" width="180" height="56" rx="8" fill="none" stroke="currentColor" opacity="0.8"/>
+            <text x="814" y="294" text-anchor="middle" font-weight="600">Parent screen</text>
+            <text x="814" y="310" text-anchor="middle" font-size="10.5" opacity="0.7">progress note card</text>
+
+          </g>
+        </svg>
+      </div>
+      <figcaption>Everything above the store runs once per recording, entirely on this machine.
+        Everything below the store runs on demand when the parent tab opens, and the only
+        line that leaves the device is the teal one — numbers, never audio, never a raw score.
+        If that call fails or no key is set, the dashed fallback below it produces the same
+        card from a template instead.</figcaption>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i> the one network-dependent hop (optional)</span>
+        <span><i class="swatch" style="background:currentColor;opacity:.5"></i> everything else — local, offline-capable</span>
+      </div>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Stage by stage</h2>
+    <div class="cards">
+      <div class="card">
+        <span class="tag">01 · Capture</span>
+        <h3>Mic → WAV, in the browser</h3>
+        <p>The child taps the mic, says the word, and the browser records it directly —
+          no plugin, no upload-then-process step.</p>
+        <div class="tech">core/capture.js — Web Audio API, encoded to 16kHz mono WAV client-side</div>
+      </div>
+      <div class="card">
+        <span class="tag">02 · Recognize</span>
+        <h3>One model pass, phone by phone</h3>
+        <p>A speech model built specifically to output phonemes (not words) turns the
+          recording into a probability, frame by frame, over every sound it knows.
+          It's the same family of model research shows is far more accurate than
+          general transcription tools at exactly this job.</p>
+        <div class="tech">facebook/wav2vec2-lv-60-espeak-cv-ft — CTC head, runs locally (CPU/MPS/CUDA), ~1.2GB, cached after first run</div>
+      </div>
+      <div class="card">
+        <span class="tag">03 · Align</span>
+        <h3>Where each sound actually sits</h3>
+        <p>The app already knows the word, so it knows which sounds to expect —
+          alignment finds where in the recording each one starts and ends.</p>
+        <div class="tech">mira_core.ctc_forced_align — Viterbi alignment over CTC posteriors, no external aligner</div>
+      </div>
+      <div class="card">
+        <span class="tag">04 · Score</span>
+        <h3>Correct, or something else</h3>
+        <p>Each sound's window gets a confidence score against the target — how much
+          of the model's certainty landed on the right phoneme versus everything else.
+          Below the line: <i>substituted</i>, <i>omitted</i>, or <i>not scored</i> if the
+          model isn't reliable enough on that sound to guess.</p>
+        <div class="tech">Goodness-of-Pronunciation (GOP), threshold-gated in policy.py</div>
+      </div>
+      <div class="card">
+        <span class="tag">05 · Remember</span>
+        <h3>The browser is the record</h3>
+        <p>Every finished session — which sounds were clear, flagged, or skipped, at
+          which position in the word — is appended to the child's history right on
+          the device. No account, no server database.</p>
+        <div class="tech">core/rewards.js → localStorage, capped at the last 30 sessions</div>
+      </div>
+      <div class="card">
+        <span class="tag">06 · Summarize</span>
+        <h3>Numbers first, then a sentence</h3>
+        <p>The parent screen's counts and trend line are plain arithmetic over that
+          history — true with or without anything else. On top of that, one optional
+          sentence is generated from those exact numbers and checked before it's shown.</p>
+        <div class="tech">server/insights.py — compute_analysis() + Groq call + forbidden-word verifier</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tech stack</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Layer</th><th>Technology</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td>Frontend</td><td class="mono">Vanilla JS, no build step</td><td>index.html + core/ + views/ — installable as a PWA (sw.js, manifest)</td></tr>
+          <tr><td>Server</td><td class="mono">FastAPI (Python)</td><td>One process serves the API and the static frontend</td></tr>
+          <tr><td>Acoustic model</td><td class="mono">wav2vec2 CTC (HF Transformers)</td><td>Phoneme-level recognition, runs on-device</td></tr>
+          <tr><td>Pronunciation dictionary</td><td class="mono">CMUdict</td><td>Word → expected ARPABET phones, never guessed</td></tr>
+          <tr><td>Storage</td><td class="mono">Browser localStorage</td><td>Session history, stars, levels — the only durable state in the app</td></tr>
+          <tr><td>Narration (optional)</td><td class="mono">Groq API — llama-3.1-8b-instant</td><td>Turns computed numbers into a sentence; never sees audio</td></tr>
+          <tr><td>Secrets</td><td class="mono">python-dotenv + .env</td><td>Gitignored, never served, never required to run</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>What's real today</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Component</th><th>Status</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>Phoneme detection (wav2vec2 + GOP)</td><td><span class="status wired">wired</span></td><td>Runs end to end on real audio; threshold not yet tuned to your voice</td></tr>
+          <tr><td>/s/ word set</td><td><span class="status validated">validated</span></td><td>Prior testing: 0.91–0.99 confidence on every /s/ test word</td></tr>
+          <tr><td>Session history &amp; progress tickers</td><td><span class="status validated">validated</span></td><td>Live-tested this session — records, persists, aggregates correctly</td></tr>
+          <tr><td>Groq narration</td><td><span class="status wired">wired</span></td><td>Tested live with a real key — returns grounded, verified text</td></tr>
+          <tr><td>Template fallback</td><td><span class="status template">fallback</span></td><td>Tested with no key set — same card, deterministic sentence</td></tr>
+          <tr><td>Trained scorer ensemble (AUC 0.843)</td><td><span class="status absent">absent</span></td><td>Needs Stage 2 artifacts not present in this repo — out of scope for now</td></tr>
+          <tr><td>Dual-ASR cross-check</td><td><span class="status absent">absent</span></td><td>Deliberately cut — would trade accuracy for a false sense of safety</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why the keys stay private</h2>
+    <ul class="layers">
+      <li><span class="n">1</span><div><b>Git never sees them</b><span>server/.env is gitignored — confirmed with git check-ignore</span></div></li>
+      <li><span class="n">2</span><div><b>Clones get a placeholder</b><span>.env.example ships instead; a fresh clone runs in fallback mode, no crash</span></div></li>
+      <li><span class="n">3</span><div><b>The server can't serve its own folder</b><span>app.py mounts only core/ and views/ over HTTP — server/ isn't a route</span></div></li>
+      <li><span class="n">4</span><div><b>Keys never round-trip to the browser</b><span>Used only for outbound calls; responses carry text, never the key</span></div></li>
+    </ul>
+  </section>
+
+  <footer>mira · engineering reference · generated during live build &amp; test, 2026-08-12</footer>
+</main>

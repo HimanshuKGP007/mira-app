@@ -4,3 +4,5 @@ server/__pycache__/
 *.pyc
 *.pyo
 .DS_Store
+.env
+server/.env

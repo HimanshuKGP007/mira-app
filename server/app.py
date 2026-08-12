@@ -12,13 +12,20 @@ import contextlib
 import pathlib
 import time
 
-from fastapi import FastAPI, File, Form, UploadFile
+from fastapi import Body, FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+import insights
 import policy
 import scorer
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv(pathlib.Path(__file__).resolve().parent / ".env")
+except ImportError:
+    pass
 
 FRONTEND = pathlib.Path(__file__).resolve().parent.parent
 
@@ -94,6 +101,25 @@ async def score(
     if isinstance(result, dict) and "provenance" in result:
         result["provenance"]["latency_ms"] = int((time.time() - t0) * 1000)
     return result
+
+
+@app.post("/insights")
+async def get_insights(payload: dict = Body(...)):
+    """Turns session history the app already has into a parent-facing note.
+
+    Body: {"child_name": str|None, "target_phone": str, "sessions": [...]}
+    where `sessions` is store.sessions from core/rewards.js, oldest first.
+    Never scores anything itself; ordinary arithmetic plus an optional,
+    verified LLM sentence on top. Falls back to a template if Groq is
+    unavailable, so this endpoint always returns something.
+    """
+    sessions = payload.get("sessions") or []
+    target_phone = payload.get("target_phone") or "s"
+    child_name = payload.get("child_name")
+
+    analysis = insights.compute_analysis(sessions, target_phone)
+    text, source = insights.narrate(analysis, child_name)
+    return {"text": text, "source": source, "analysis": analysis}
 
 
 # --------------------------------------------------------------------------

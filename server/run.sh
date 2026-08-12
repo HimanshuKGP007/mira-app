@@ -25,6 +25,18 @@ if [ "$NEW_HASH" != "$OLD_HASH" ]; then
   echo "$NEW_HASH" > "$REQ_HASH_FILE"
 fi
 
+# If the acoustic model is already in the local HF cache, force fully
+# offline loading — no "check for updates" call to the Hub, so a demo never
+# depends on the network being up. Only skipped on a genuinely first run,
+# when the initial download still needs to happen.
+MODEL_ID="${MIRA_MODEL_ID:-facebook/wav2vec2-lv-60-espeak-cv-ft}"
+CACHE_NAME="models--${MODEL_ID//\//--}"
+if [ -d "$HOME/.cache/huggingface/hub/$CACHE_NAME" ]; then
+  export HF_HUB_OFFLINE=1
+  echo "[mira] acoustic model already cached — running fully offline, no network needed"
+else
+  echo "[mira] first run downloads the acoustic model (~1.26 GB) to ~/.cache/huggingface"
+fi
+
 echo "[mira] starting on http://localhost:${PORT}"
-echo "[mira] first run downloads the acoustic model (~1.26 GB) to ~/.cache/huggingface"
 exec "$VENV/bin/uvicorn" app:app --host 127.0.0.1 --port "$PORT"
