@@ -50,6 +50,79 @@ export const ICONS = {
     <ellipse cx="50" cy="44" rx="15" ry="3.6" fill="#9BDBF3"/>
     <path d="M40 52 v18" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".65"/></svg>`,
 
+  soap: `<svg viewBox="0 0 100 100"><rect x="18" y="34" width="64" height="34" rx="17" fill="#8FE3D3"/>
+    <rect x="18" y="34" width="64" height="34" rx="17" fill="none" stroke="#4FBFA8" stroke-width="2.5"/>
+    <ellipse cx="38" cy="46" rx="10" ry="5" fill="#fff" opacity=".5"/></svg>`,
+
+  spoon: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="32" rx="18" ry="22" fill="#CFD5E6"/>
+    <ellipse cx="46" cy="26" rx="7" ry="10" fill="#fff" opacity=".5"/>
+    <rect x="46" y="50" width="8" height="42" rx="4" fill="#CFD5E6"/></svg>`,
+
+  house: `<svg viewBox="0 0 100 100"><path d="M50 16 L88 46 H12 Z" fill="#F0616A"/>
+    <rect x="22" y="46" width="56" height="40" fill="#FFE8B8"/>
+    <rect x="42" y="62" width="16" height="24" fill="#7A6CF0"/>
+    <rect x="30" y="54" width="12" height="12" fill="#CFE9FF"/><rect x="58" y="54" width="12" height="12" fill="#CFE9FF"/></svg>`,
+
+  mouse: `<svg viewBox="0 0 100 100"><circle cx="34" cy="30" r="12" fill="#B9C0D4"/><circle cx="66" cy="30" r="12" fill="#B9C0D4"/>
+    <ellipse cx="50" cy="56" rx="30" ry="24" fill="#D5D9E8"/>
+    <path d="M78 60 Q94 66 90 80" stroke="#D5D9E8" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <circle cx="40" cy="52" r="3" fill="#3C4666"/><ellipse cx="52" cy="60" rx="4" ry="3" fill="#FF9EC0"/></svg>`,
+
+  castle: `<svg viewBox="0 0 100 100">
+    <rect x="14" y="50" width="20" height="34" fill="#B9C0D4"/>
+    <rect x="66" y="50" width="20" height="34" fill="#B9C0D4"/>
+    <rect x="34" y="60" width="32" height="24" fill="#CFD5E6"/>
+    <rect x="14" y="44" width="6" height="8" fill="#B9C0D4"/><rect x="28" y="44" width="6" height="8" fill="#B9C0D4"/>
+    <rect x="66" y="44" width="6" height="8" fill="#B9C0D4"/><rect x="80" y="44" width="6" height="8" fill="#B9C0D4"/>
+    <rect x="42" y="68" width="16" height="16" fill="#7A6CF0"/>
+    <path d="M50 24 v18" stroke="#8A93AD" stroke-width="3"/><path d="M50 24 l12 5 l-12 5 Z" fill="#F0616A"/></svg>`,
+
+  basket: `<svg viewBox="0 0 100 100"><path d="M24 46 h52 l-6 34 a6 6 0 0 1 -6 5 h-28 a6 6 0 0 1 -6 -5 Z" fill="#E0A81E"/>
+    <path d="M28 54 h44 M25 64 h50 M27 74 h46" stroke="#B5820F" stroke-width="2.5"/>
+    <path d="M36 46 a14 18 0 0 1 28 0" fill="none" stroke="#8A5A12" stroke-width="4"/></svg>`,
+
+  whistle: `<svg viewBox="0 0 100 100"><ellipse cx="46" cy="50" rx="26" ry="18" fill="#F5A93B"/>
+    <circle cx="30" cy="50" r="6" fill="#3C4666"/>
+    <rect x="70" y="42" width="14" height="16" rx="7" fill="#F5A93B"/>
+    <circle cx="20" cy="34" r="7" fill="none" stroke="#8A93AD" stroke-width="3"/></svg>`,
+
+  dinosaur: `<svg viewBox="0 0 100 100"><path d="M20 78 C16 60 24 46 40 44 C40 34 48 24 58 26 C56 32 56 36 60 40
+    C74 40 82 50 80 62 C88 62 92 68 90 74 L80 74 C80 80 74 84 68 82 L66 78 L34 78 C32 84 22 84 20 78 Z" fill="#5BAF4E"/>
+    <circle cx="52" cy="36" r="3" fill="#3C4666"/>
+    <path d="M46 30 l6 -8 M56 28 l4 -9 M64 32 l4 -8" stroke="#3E8C42" stroke-width="4" stroke-linecap="round"/>
+    <rect x="30" y="78" width="6" height="10" fill="#3E8C42"/><rect x="64" y="78" width="6" height="10" fill="#3E8C42"/></svg>`,
+
+  seven: `<svg viewBox="0 0 100 100"><path d="M22 22 H78 L44 84" fill="none" stroke="#7A6CF0" stroke-width="14"
+    stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+
+  sunglasses: `<svg viewBox="0 0 100 100"><rect x="14" y="38" width="30" height="24" rx="10" fill="#3C4666"/>
+    <rect x="56" y="38" width="30" height="24" rx="10" fill="#3C4666"/>
+    <path d="M44 46 h12" stroke="#3C4666" stroke-width="5"/>
+    <path d="M14 46 L4 42 M86 46 L96 42" stroke="#3C4666" stroke-width="4" stroke-linecap="round"/>
+    <ellipse cx="24" cy="46" rx="7" ry="5" fill="#8FE3D3" opacity=".7"/><ellipse cx="66" cy="46" rx="7" ry="5" fill="#8FE3D3" opacity=".7"/></svg>`,
+
+  sausage: `<svg viewBox="0 0 100 100"><g fill="#D2434C">
+    <ellipse cx="28" cy="50" rx="16" ry="13"/><ellipse cx="52" cy="50" rx="16" ry="13"/><ellipse cx="76" cy="50" rx="14" ry="12"/></g>
+    <line x1="40" y1="40" x2="40" y2="60" stroke="#8B2530" stroke-width="3"/>
+    <line x1="64" y1="40" x2="64" y2="60" stroke="#8B2530" stroke-width="3"/>
+    <ellipse cx="24" cy="44" rx="5" ry="3" fill="#fff" opacity=".3"/></svg>`,
+
+  biscuits: `<svg viewBox="0 0 100 100"><rect x="16" y="40" width="40" height="40" rx="8" fill="#E0A81E" transform="rotate(-8 36 60)"/>
+    <rect x="44" y="36" width="40" height="40" rx="8" fill="#F5A93B" transform="rotate(6 64 56)"/>
+    <circle cx="58" cy="48" r="2.4" fill="#B5820F"/><circle cx="70" cy="56" r="2.4" fill="#B5820F"/>
+    <circle cx="60" cy="64" r="2.4" fill="#B5820F"/><circle cx="72" cy="68" r="2.4" fill="#B5820F"/></svg>`,
+
+  zoneStart: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="70" rx="38" ry="16" fill="#D9EFC9"/>
+    <path d="M50 62 C40 62 34 52 34 42 C34 30 42 22 50 22 C58 22 66 30 66 42 C66 52 60 62 50 62 Z" fill="#7FCB6E"/>
+    <circle cx="42" cy="40" r="3" fill="#3E8C42"/><circle cx="58" cy="40" r="3" fill="#3E8C42"/></svg>`,
+  zoneMiddle: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="70" rx="38" ry="16" fill="#D9EFC9"/>
+    <path d="M50 62 C36 62 28 50 28 38 C28 24 38 16 50 16 C62 16 72 24 72 38 C72 50 64 62 50 62 Z" fill="#5BAF4E"/>
+    <circle cx="40" cy="36" r="3.2" fill="#fff"/><circle cx="60" cy="36" r="3.2" fill="#fff"/></svg>`,
+  zoneEnd: `<svg viewBox="0 0 100 100"><ellipse cx="50" cy="70" rx="38" ry="16" fill="#D9EFC9"/>
+    <path d="M50 62 C34 62 24 48 24 34 C24 18 36 8 50 8 C64 8 76 18 76 34 C76 48 66 62 50 62 Z" fill="#3E8C42"/>
+    <circle cx="38" cy="32" r="3.4" fill="#FFC93C"/><circle cx="62" cy="32" r="3.4" fill="#FFC93C"/>
+    <path d="M40 46 Q50 54 60 46" stroke="#FFC93C" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+
   /* --- theme --- */
   snake: `<svg viewBox="0 0 100 100">
     <path d="M22 74 c0 -14 18 -12 18 -24 c0 -12 -16 -10 -16 -22 c0 -10 12 -14 22 -10"
