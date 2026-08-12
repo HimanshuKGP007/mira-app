@@ -97,10 +97,8 @@ function positionBreakdownCard(session) {
   </div>`;
 }
 
-function itemBlock(it, key) {
-  const c = corrections.get(key);
-  const shown = c ? c.clinician_said : it.verdict;
-  const rows = (it.instances && it.instances.length ? it.instances : [it]).map(inst => {
+function instanceRows(instances) {
+  return (instances || []).map(inst => {
     const marking = inst.marking || inst.verdict;
     const gop = inst.gop;
     return `
@@ -120,10 +118,24 @@ function itemBlock(it, key) {
       </td>
     </tr>`;
   }).join('');
+}
+
+function itemBlock(it, key) {
+  const c = corrections.get(key);
+  const shown = c ? c.clinician_said : it.verdict;
+
+  const attempts = it.attemptLog && it.attemptLog.length
+    ? it.attemptLog
+    : [{ n: 1, verdict: it.verdict, instances: (it.instances && it.instances.length ? it.instances : [it]) }];
+
+  const tables = attempts.map((a, i) => `
+    ${attempts.length > 1 ? `<div class="p" style="margin:${i ? '10px' : '2px'} 0 4px">Attempt ${a.n}${a.verdict ? ` &middot; ${label(a.verdict)}` : ''}</div>` : ''}
+    <table class="sheet"><tbody>${instanceRows(a.instances)}</tbody></table>`).join('');
+
   return `
   <div class="wordblock" data-key="${key}">
     <div class="wh"><span class="w">${it.word}</span><span class="p">${it.position}${it.struggling ? ' &middot; <span style="color:var(--amber-d)">no improvement across attempts</span>' : ''}</span></div>
-    <table class="sheet"><tbody>${rows}</tbody></table>
+    ${tables}
     ${c ? `<div class="audit">clinician override &middot; Mira said <s>${label(c.mira_said)}</s>,
            you marked <b>${label(c.clinician_said)}</b></div>` : ''}
     <div class="override">

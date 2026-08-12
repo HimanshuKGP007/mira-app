@@ -376,9 +376,11 @@ function handleOutcome(res) {
   const targets = result.targets || [];
   it.result = result;
   it.attempts++;
+  it.attemptLog ||= [];
 
   // The word may be unscorable outright (not in the dictionary, no phone mapped).
   if (result.unscorableReason && !result.phones.length) {
+    it.attemptLog.push({ n: it.attempts, at: new Date().toISOString(), verdict: 'not_scored', instances: [] });
     it.verdict = 'not_scored';
     paint('not_scored');
     miraState(null);
@@ -395,6 +397,20 @@ function handleOutcome(res) {
        : targets.some(t => t.marking !== 'not_scored') ? 'substituted'
        : 'not_scored')
     : 'not_scored';
+
+  // This attempt's own scoring, kept alongside (never in place of) the final
+  // verdict above.
+  it.attemptLog.push({
+    n: it.attempts,
+    at: new Date().toISOString(),
+    verdict,
+    instances: targets.map(t => ({
+      position: t.position, marking: t.marking,
+      confidence: t.confidence, confidenceKind: t.confidenceKind,
+      substitute: t.substitute ?? null, reason: t.reason ?? null,
+      durationMs: t.durationMs ?? null, gop: t.gop ?? null,
+    })),
+  });
 
   const attemptConfidences = targets.map(t => t.confidence).filter(c => c != null);
   const worstThisAttempt = attemptConfidences.length ? Math.min(...attemptConfidences) : null;

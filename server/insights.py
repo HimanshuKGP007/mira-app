@@ -55,10 +55,12 @@ def compute_analysis(sessions, target_phone):
             bp["scored"] += v.get("scored", 0)
             bp["clear"] += v.get("clear", 0)
         for item in s.get("items", []):
-            for inst in item.get("instances", []):
-                sub = inst.get("substitute")
-                if sub:
-                    substitute_counts[sub] = substitute_counts.get(sub, 0) + 1
+            attempts = item.get("attemptLog") or [{"instances": item.get("instances", [])}]
+            for attempt in attempts:
+                for inst in attempt.get("instances", []):
+                    sub = inst.get("substitute")
+                    if sub:
+                        substitute_counts[sub] = substitute_counts.get(sub, 0) + 1
 
     top_substitute = None
     if substitute_counts:

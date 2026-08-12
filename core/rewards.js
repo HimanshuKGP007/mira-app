@@ -218,6 +218,7 @@ export function commitSession({ levelId, levelName, targetPhone, items, starsAlr
           substitute: t.substitute ?? null, reason: t.reason ?? null,
           durationMs: t.durationMs ?? null, gop: t.gop ?? null,
         })),
+        attemptLog: i.attemptLog ?? [],
       };
     }),
   };

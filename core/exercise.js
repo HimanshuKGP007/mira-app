@@ -107,9 +107,13 @@ export function newSession(level) {
     items: wordsForLevel(level).map(w => ({
       word: w,
       verdict: null,     // 'correct' | 'substituted' | 'omitted' | 'assimilated' | 'not_scored'
-      result: null,      // the normalised contract object
+      result: null,      // the normalised contract object, from the most recent attempt
       attempts: 0,
       confidenceHistory: [],   // lowest target-instance confidence per attempt, oldest first
+      // Every attempt's own scoring, oldest first — never overwritten. The
+      // word's final verdict/result above still drive stars/crowns/byPosition
+      // exactly as before; this is purely additive.
+      attemptLog: [],
       demo: false,
     })),
   };
