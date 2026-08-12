@@ -11,7 +11,7 @@
    ========================================================================== */
 
 import { ICONS, icon, miraSVG } from './icons.js';
-import { LEVELS, newSession, current, isComplete, TARGET_PHONE, TARGET_LABEL } from '../core/exercise.js';
+import { LEVELS, newSession, current, isComplete, levelFromWords, TARGET_PHONE, TARGET_LABEL } from '../core/exercise.js';
 import * as rewards from '../core/rewards.js';
 import { store } from '../core/rewards.js';
 import { score, OUTCOME } from '../core/client.js';
@@ -70,7 +70,7 @@ export function hudHTML() {
 /* ---------------- map ---------------- */
 const NODE_POS = [
   { x: 170, y: 524 }, { x: 96, y: 430 }, { x: 212, y: 338 },
-  { x: 108, y: 248 }, { x: 226, y: 162 }, { x: 160, y: 80 },
+  { x: 108, y: 248 }, { x: 226, y: 162 }, { x: 160, y: 80 }, { x: 270, y: 44 },
 ];
 const lvState = id => store.levels[id] || { done: false, crowns: 0 };
 const currentIndex = () => {
@@ -145,8 +145,22 @@ export function renderMap() {
       animation-delay:${(Math.random() * 4).toFixed(1)}s"></div>`;
   }
 
+  if (store.nextWords && store.nextWords.length) {
+    html += `<button class="node practice" id="practiceNode"
+      style="left:50%;top:6%"><div class="name">Practice Trail</div><div class="face">${icon('bulb', 26)}</div></button>`;
+  }
+
   const world = $('#mapWorld');
   world.innerHTML = html;
+
+  const practiceBtn = $('#practiceNode');
+  if (practiceBtn) {
+    practiceBtn.addEventListener('click', () => {
+      startLevel(levelFromWords(store.nextWords));
+      store.nextWords = null;   // consumed - Mira will offer a new one after the next pattern update
+    });
+  }
+
   world.querySelectorAll('.node').forEach(n => {
     n.addEventListener('click', () => {
       const i = +n.dataset.i;

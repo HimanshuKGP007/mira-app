@@ -11,7 +11,7 @@
 
 import { icon } from './icons.js';
 import { store, lifetime } from '../core/rewards.js';
-import { LEVELS } from '../core/exercise.js';
+import { LEVELS, WORDS } from '../core/exercise.js';
 import { feedbackForSession } from '../core/policy.js';
 import { OPERATING_POINT, SVARAH } from '../core/policy.js';
 import { config } from '../core/client.js';
@@ -36,7 +36,7 @@ export function render() {
       <div class="card">
         <h3>${icon('chart')}Progress</h3>
         <div class="note">No practice sessions yet. Once ${name} finishes a trail,
-        this page shows what was measured — and, just as importantly, what Mira declined to judge.</div>
+        this page shows what was measured, and just as importantly, what Mira declined to judge.</div>
       </div>${aboutCard()}`;
     bindTechnicalToggle();
     return;
@@ -45,6 +45,7 @@ export function render() {
   body.innerHTML = `
     ${lastSessionCard(last, name)}
     ${insightsCardShell()}
+    ${whyExercisesCard()}
     ${positionCard(agg)}
     ${rewardCard()}
     ${trophyCard()}
@@ -59,8 +60,17 @@ export function render() {
 function insightsCardShell() {
   return `
   <div class="card" id="insightsCard">
-    <h3>${icon('bulb')}Progress note</h3>
+    <h3>${icon('bulb')}What Mira has found</h3>
     <div class="note" id="insightsBody">Putting together a note on recent practice&hellip;</div>
+  </div>`;
+}
+
+/* --- why today's practice looks this way: descriptive, never "suggest" --- */
+function whyExercisesCard() {
+  return `
+  <div class="card" id="whyCard" style="display:none">
+    <h3>${icon('target')}Why today's practice looks this way</h3>
+    <div class="note" id="whyBody"></div>
   </div>`;
 }
 
@@ -75,11 +85,22 @@ async function loadInsights(targetPhone) {
         child_name: store.name || null,
         target_phone: targetPhone,
         sessions: store.sessions,
+        word_bank: WORDS.map((w, i) => ({ index: i, text: w.text, position: w.position })),
       }),
     });
     if (!res.ok) throw new Error('bad status');
     const data = await res.json();
     el.textContent = data.text;
+
+    const lines = data.text.split('\n').map(s => s.trim()).filter(Boolean);
+    if (lines.length >= 3) {
+      const whyCard = $('#whyCard');
+      const whyBody = $('#whyBody');
+      if (whyCard && whyBody) { whyBody.textContent = lines[2]; whyCard.style.display = ''; }
+    }
+    if (Array.isArray(data.next_words) && data.next_words.length) {
+      store.nextWords = data.next_words;
+    }
   } catch {
     // The tickers above already show the real numbers; losing the note is
     // a cosmetic failure, never a blocking one.
@@ -96,7 +117,7 @@ function lastSessionCard(r, name) {
 
   return `
   <div class="card">
-    <h3>${icon('clipboard')}Last session — ${r.levelName}</h3>
+    <h3>${icon('clipboard')}Last session: ${r.levelName}</h3>
     <div class="denom">
       <div class="box clear"><div class="n">${r.clear}</div><div class="l">clear</div></div>
       <div class="box flagged"><div class="n">${r.flagged}</div><div class="l">flagged</div></div>
@@ -113,7 +134,7 @@ function lastSessionCard(r, name) {
         <div style="display:flex;gap:7px;flex-wrap:wrap">
           ${fb.practise.map(w => `<span class="pill" style="color:var(--vio-d);font-size:13px;padding:6px 13px">${w}</span>`).join('')}
         </div>
-        <div class="note" style="margin-top:8px">Slip these into ordinary conversation — no drilling required.
+        <div class="note" style="margin-top:8px">Slip these into ordinary conversation, no drilling required.
         If ${name} says one differently, just say the word back the right way and carry on.</div>
       </div>` : ''}
     <div class="note" style="margin-top:11px;font-size:12px;color:var(--ink-faint)">
@@ -150,7 +171,7 @@ function positionCard(agg) {
     <h3>${icon('chart')}Across word positions</h3>
     ${rows}
     <div class="note" style="margin-top:9px">A sound can be clear at the start of a word and
-    harder at the end — they are counted separately because they are genuinely different skills.</div>
+    harder at the end; they are counted separately because they are genuinely different skills.</div>
   </div>`;
 }
 
@@ -169,9 +190,9 @@ function rewardCard() {
     </div>
     <div class="rc-track"><div class="rc-fill" style="width:${pct}%"></div></div>
     <div class="rc-nums"><span>${cur} stars</span><span>target ${rw.target}</span></div>
-    <button class="btn-ghost" id="editGoal" style="width:100%;margin-top:11px">Set a new reward goal</button>
+    <button class="btn-accent" id="editGoal" style="width:100%;margin-top:11px">Set a new reward goal</button>
     <div class="note" style="margin-top:9px">A star is only given when Mira marks the sound
-    <b>correct</b> — never for a word it declined to judge. The goal tracks measured practice, not screen time.</div>
+    <b>correct</b>, never for a word it declined to judge. The goal tracks measured practice, not screen time.</div>
   </div>`;
 }
 
@@ -209,14 +230,9 @@ function aboutCard(scorer) {
   <div class="card">
     <h3>${icon('shield')}What Mira can and cannot tell you</h3>
     <div class="pitch">
-      Mira listens to each practice word and marks the sound. It is a rough guide, not a verdict:
-      it misses a good share of real errors and sometimes flags a sound that was perfectly fine.
-      It says <b>not scored</b> rather than guessing on the sounds it measures poorly.
-    </div>
-    <div class="note" style="margin-top:10px">
-      This means <b>a clear result is not proof a sound was right</b>, and a flag is not proof it was wrong.
-      Mira is a practice aid, not an assessment. It does not diagnose, does not rate severity,
-      and does not decide what to work on next — a speech-language pathologist does that.
+      Mira is a practice aid, not an assessment. It can miss real errors or flag a sound that was
+      fine, and it says <b>not scored</b> rather than guess on sounds it measures poorly.
+      It does not diagnose, rate severity, or replace a speech-language pathologist.
     </div>
     <button class="btn-ghost" id="toggleTechnical" style="width:100%;margin-top:11px">Show technical details</button>
     <div class="note" id="technicalDetails" style="margin-top:10px;display:none">
@@ -227,11 +243,11 @@ function aboutCard(scorer) {
         <b>${scorer.expected_auc}</b> (where 0.5 is a coin toss and 1.0 is perfect).
         A stronger version of this model reaches 0.843 but is not installed.` : ''}
         ${scorer.calibrated === false ? `Confidence values here are raw model output and are
-        <b>not calibrated</b> — treat them as a ranking, not a probability.` : ''}
+        <b>not calibrated</b>, treat them as a ranking, not a probability.` : ''}
       </div>` : ''}
       <div style="margin-top:9px;font-size:12px;color:var(--ink-faint)">
         The underlying approach was tested on ${SVARAH.nUtterances.toLocaleString()} Indian-English
-        recordings across 17 states and showed no accent penalty — it flagged
+        recordings across 17 states and showed no accent penalty: it flagged
         ${(SVARAH.flagRate * 100).toFixed(1)}% of sounds, below its own
         ${(SVARAH.ownNoiseFloor * 100).toFixed(1)}% baseline. Figures for the fully trained
         version: detection ${(OPERATING_POINT.recallOnPoor * 100).toFixed(1)}%,

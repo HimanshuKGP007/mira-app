@@ -13,7 +13,7 @@
 const LS = {
   name: 'mira_name', stars: 'mira_stars', xp: 'mira_xp',
   levels: 'mira_levels', badges: 'mira_badges', reward: 'mira_reward',
-  lastDone: 'mira_lastDone', sessions: 'mira_sessions',
+  lastDone: 'mira_lastDone', sessions: 'mira_sessions', nextWords: 'mira_nextWords',
 };
 
 export const STAR_PER_CORRECT = 5;
@@ -39,6 +39,10 @@ export const store = {
   set sessions(v) { localStorage.setItem(LS.sessions, JSON.stringify(v.slice(-30))); },
   get reward() { return safeJSON(LS.reward, { label: 'Trip to the park', target: 250 }); },
   set reward(v) { localStorage.setItem(LS.reward, JSON.stringify(v)); },
+  // Word-bank indices Mira has picked out for the next Practice Trail, or
+  // null when there's no pending one. Cleared once the child plays it.
+  get nextWords() { return safeJSON(LS.nextWords, null); },
+  set nextWords(v) { localStorage.setItem(LS.nextWords, JSON.stringify(v)); },
   reset() { Object.values(LS).forEach(k => localStorage.removeItem(k)); },
 };
 function safeJSON(k, fallback) {

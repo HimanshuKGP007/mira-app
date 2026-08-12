@@ -77,6 +77,19 @@ export function wordsForLevel(level) {
   return level.words.map(i => WORDS[i]);
 }
 
+/** Build a level-shaped object from arbitrary word-bank indices (used for
+ * the practice set Mira assembles after enough sessions to detect a
+ * pattern). Falls back to nothing usable if the indices are empty/invalid -
+ * callers must check the returned words.length before using it. */
+export function levelFromWords(indices) {
+  const valid = (indices || []).filter(i => Number.isInteger(i) && i >= 0 && i < WORDS.length);
+  return {
+    id: 'practice',
+    name: 'Practice Trail',
+    words: valid,
+  };
+}
+
 /** A fresh session for one level. */
 export function newSession(level) {
   return {

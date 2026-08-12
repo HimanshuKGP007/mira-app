@@ -66,6 +66,12 @@ body{
 .btn-ghost{background:var(--nm);color:var(--ink);font-size:15px;padding:12px 24px;
   box-shadow:var(--raise-sm);font-family:var(--font-ui);font-weight:800}
 .btn-ghost:active{box-shadow:var(--press-sm);transform:scale(.96)}
+.btn-accent{background:linear-gradient(180deg,var(--vio),var(--vio-d));color:#fff;
+  font-size:15px;padding:12px 24px;border-radius:999px;border:none;cursor:pointer;
+  font-family:var(--font-ui);font-weight:800;
+  box-shadow:6px 6px 14px rgba(91,76,224,.28),-4px -4px 9px #fff,inset 0 1px 0 rgba(255,255,255,.25);
+  transition:transform .16s var(--pop),box-shadow .16s ease}
+.btn-accent:active{transform:scale(.96)}
 .quiet{font-family:var(--font-ui);font-size:14px;font-weight:800;color:var(--ink-soft);
   background:none;border:none;cursor:pointer;padding:9px}
 .quiet:hover{color:var(--vio-d)}
@@ -168,6 +174,8 @@ input:focus-visible{box-shadow:var(--press-sm),0 0 0 3px rgba(122,108,240,.35)}
 .node .face svg{width:28px;height:28px}
 .node .num{font-family:var(--font-kid);font-weight:700;font-size:21px;color:#fff}
 .node.current{animation:nodePulse 1.5s ease-in-out infinite}
+.node.practice .face{background:linear-gradient(180deg,#FFDD7A,var(--gold))}
+.node.practice{animation:nodePulse 1.5s ease-in-out infinite}
 @keyframes nodePulse{0%,100%{box-shadow:var(--raise)}50%{box-shadow:0 0 0 8px rgba(91,175,78,.25),var(--raise)}}
 .node .crowns{position:absolute;bottom:-9px;left:50%;transform:translateX(-50%);display:flex;gap:1px;
   background:var(--nm);border-radius:99px;padding:2px 5px;box-shadow:var(--raise-sm)}
