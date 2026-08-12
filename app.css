@@ -105,6 +105,42 @@ input:focus-visible{box-shadow:var(--press-sm),0 0 0 3px rgba(122,108,240,.35)}
   background:var(--nm);box-shadow:var(--press-sm);font-size:12.5px;font-weight:800;
   color:var(--amber-d);font-family:var(--font-ui)}
 
+/* ---------- listen button (core/speech.js) ----------
+   Every surface that shows a practice word carries one, so the "ideal"
+   pronunciation is always one tap away from the word itself.            */
+.say-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:none;cursor:pointer;border-radius:999px;background:var(--nm);color:var(--vio-d);
+  font-family:var(--font-ui);font-weight:800;box-shadow:var(--raise-sm);
+  transition:transform .16s var(--pop),box-shadow .16s ease,color .16s ease;flex:0 0 auto}
+.say-btn:active{box-shadow:var(--press-sm);transform:scale(.94)}
+.say-btn svg{width:1.15em;height:1.15em;flex:0 0 auto}
+.say-btn.playing{color:var(--teal-d);box-shadow:var(--press-sm)}
+.say-btn.playing svg{animation:sayPulse .7s ease-in-out infinite}
+@keyframes sayPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.16);opacity:.72}}
+.say-sm{font-size:11px;padding:5px 9px}
+.say-md{font-size:13px;padding:8px 14px}
+.say-lg{font-family:var(--font-kid);font-size:16px;font-weight:600;padding:11px 22px;
+  color:var(--teal-d);box-shadow:var(--raise)}
+.say-lg svg{width:20px;height:20px}
+/* on a word pill: the pill and its speaker read as one control */
+.pill-say{display:inline-flex;align-items:center;gap:2px}
+
+/* ---------- attempt trail (all attempts, never just the last) ---------- */
+.attempts{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin-top:5px}
+.attempt-chip{display:inline-flex;align-items:center;gap:4px;border-radius:999px;
+  padding:3px 9px;font-family:var(--font-ui);font-size:10.5px;font-weight:800;
+  background:var(--nm);box-shadow:var(--raise-sm);color:var(--ink-soft)}
+.attempt-chip .n{color:var(--ink-faint);font-variant-numeric:tabular-nums}
+.attempt-chip.correct{color:var(--green-d)}
+.attempt-chip.substituted,.attempt-chip.omitted,.attempt-chip.assimilated{color:var(--red-d)}
+.attempt-chip.not_scored,.attempt-chip.retry{color:var(--slate)}
+.attempt-arrow{color:var(--ink-faint);font-size:11px;font-weight:800}
+.attempt-block{margin-top:8px;padding-top:7px;border-top:1px dashed #DDE3F0}
+.attempt-block:first-of-type{border-top:none;padding-top:0}
+.attempt-head{display:flex;align-items:center;gap:7px;font-size:10.5px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.7px;color:var(--ink-soft);margin-bottom:3px}
+.attempt-head .final{color:var(--vio-d)}
+
 /* ---------- verdict colours (shared vocabulary) ---------- */
 .v-correct{color:var(--green-d)} .v-flagged{color:var(--amber-d)}
 .v-error{color:var(--red-d)} .v-not-scored{color:var(--slate)}
@@ -299,6 +335,10 @@ input:focus-visible{box-shadow:var(--press-sm),0 0 0 3px rgba(122,108,240,.35)}
 .card h3 svg{width:15px;height:15px}
 .note{font-size:13px;font-weight:600;color:var(--ink-soft);line-height:1.55}
 .note b{color:var(--ink)}
+.note ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.note li{padding-left:15px;position:relative}
+.note li::before{content:'';position:absolute;left:0;top:8px;width:5px;height:5px;
+  border-radius:50%;background:var(--vio-d,var(--ink-soft))}
 
 /* the scored / not-scored pair — always side by side */
 .denom{display:flex;gap:10px}

@@ -107,9 +107,16 @@ export function newSession(level) {
     items: wordsForLevel(level).map(w => ({
       word: w,
       verdict: null,     // 'correct' | 'substituted' | 'omitted' | 'assimilated' | 'not_scored'
-      result: null,      // the normalised contract object
+      result: null,      // the normalised contract object, LAST attempt only
       attempts: 0,
       confidenceHistory: [],   // lowest target-instance confidence per attempt, oldest first
+      // Every attempt at this word, oldest first, each with its own markings.
+      // A word can be attempted up to three times and the three can differ
+      // completely — substituted, then omitted, then correct. Keeping only
+      // the last one (which `result` does, and which the reports used to
+      // read) throws away exactly the part that shows how the child is
+      // moving. Nothing here is ever overwritten.
+      attemptLog: [],
       demo: false,
     })),
   };

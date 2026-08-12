@@ -15,8 +15,17 @@ import { LEVELS, WORDS } from '../core/exercise.js';
 import { feedbackForSession } from '../core/policy.js';
 import { OPERATING_POINT, SVARAH } from '../core/policy.js';
 import { config } from '../core/client.js';
+import { listenButton } from '../core/speech.js';
 
 const $ = s => document.querySelector(s);
+
+/** A practice word the parent can both read and hear. The listen button is
+ *  never decoration here: saying the word correctly at home is the whole
+ *  instruction, so the model of it has to be one tap away. */
+function wordPill(word) {
+  return `<span class="pill pill-say" style="color:var(--vio-d);font-size:13px;padding:5px 6px 5px 13px">
+    ${escapeHtml(word)}${listenButton(word, { size: 'sm' })}</span>`;
+}
 
 export function render() {
   const name = store.name || 'your child';
@@ -44,6 +53,7 @@ export function render() {
 
   body.innerHTML = `
     ${lastSessionCard(last, name)}
+    ${attemptStoryCard(last, name)}
     ${insightsCardShell()}
     ${whyExercisesCard()}
     ${positionCard(agg)}
@@ -91,7 +101,10 @@ async function loadInsights(targetPhone) {
     });
     if (!res.ok) throw new Error('bad status');
     const data = await res.json();
-    el.textContent = data.text;
+    const bullets = Array.isArray(data.bullets) ? data.bullets : [];
+    el.innerHTML = bullets.length
+      ? `<ul>${bullets.map(b => `<li>${renderBold(b)}</li>`).join('')}</ul>`
+      : '';
 
     if (Array.isArray(data.next_words) && data.next_words.length) {
       store.nextWords = data.next_words;
@@ -102,7 +115,7 @@ async function loadInsights(targetPhone) {
         whyBody.textContent = 'Mira picked out these words for the next practice trail, based on recent patterns.';
         whyWords.innerHTML = data.next_words
           .map(i => WORDS[i]).filter(Boolean)
-          .map(w => `<span class="pill" style="color:var(--vio-d);font-size:13px;padding:6px 13px">${escapeHtml(w.text)}</span>`)
+          .map(w => wordPill(w.text))
           .join('');
         whyCard.style.display = '';
       }
@@ -138,7 +151,7 @@ function lastSessionCard(r, name) {
         <div class="l" style="font-size:11px;font-weight:800;color:var(--ink-soft);
           text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px">Worth repeating this week</div>
         <div style="display:flex;gap:7px;flex-wrap:wrap">
-          ${fb.practise.map(w => `<span class="pill" style="color:var(--vio-d);font-size:13px;padding:6px 13px">${w}</span>`).join('')}
+          ${fb.practise.map(w => wordPill(w)).join('')}
         </div>
         <div class="note" style="margin-top:8px">Slip these into ordinary conversation, no drilling required.
         If ${name} says one differently, just say the word back the right way and carry on.</div>
@@ -146,6 +159,66 @@ function lastSessionCard(r, name) {
     <div class="note" style="margin-top:11px;font-size:12px;color:var(--ink-faint)">
       ${when.toLocaleDateString()} · ${when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
     </div>
+  </div>`;
+}
+
+/* --- every attempt, in plain words ---------------------------------------
+   A word gets up to three goes, and what happened on the earlier ones is
+   most of the story: "clear in the end" reads very differently when the
+   first two goes dropped the sound entirely. Each word is shown with its
+   whole chain of attempts, in the parent register — what happened, never a
+   number, never a confidence.                                             */
+const ATTEMPT_WORDS = {
+  correct: 'clear',
+  omitted: 'sound left out',
+  substituted: 'sound came out differently',
+  assimilated: 'blended into the sound beside it',
+  not_scored: 'not scored',
+};
+
+function attemptPhrase(a) {
+  if (a.outcome === 'retry' || a.outcome === 'error') return 'recording not usable';
+  const v = a.verdict || 'not_scored';
+  if (v === 'substituted') {
+    const sub = (a.instances || []).find(i => i.substitute)?.substitute;
+    return sub ? `sounded closer to /${sub}/` : ATTEMPT_WORDS.substituted;
+  }
+  return ATTEMPT_WORDS[v] || v;
+}
+
+function attemptStoryCard(r, name) {
+  const rows = (r.items || [])
+    .filter(it => (it.attempts || []).length)
+    .map(it => {
+      const attempts = it.attempts;
+      const chips = attempts.map(a => {
+        const cls = a.outcome === 'scored' ? (a.verdict || 'not_scored') : 'retry';
+        return `<span class="attempt-chip ${cls}"><span class="n">${a.n}</span>${attemptPhrase(a)}</span>`;
+      }).join('<span class="attempt-arrow">&rsaquo;</span>');
+      return `
+      <div style="margin-bottom:11px">
+        <div style="display:flex;align-items:center;gap:7px">
+          <b style="font-family:var(--font-kid);font-size:15px">${escapeHtml(it.word)}</b>
+          ${listenButton(it.word, { size: 'sm' })}
+          <span style="font-size:11px;font-weight:800;color:var(--ink-soft);
+            text-transform:uppercase;letter-spacing:.6px">${it.position}</span>
+        </div>
+        <div class="attempts">${chips}</div>
+      </div>`;
+    }).join('');
+
+  if (!rows) return '';                        // session recorded before attempts were kept
+
+  const multi = (r.items || []).some(it => (it.attempts || []).length > 1);
+  return `
+  <div class="card">
+    <h3>${icon('target')}Every attempt, word by word</h3>
+    ${rows}
+    <div class="note">${multi
+      ? `Where ${name} had more than one go at a word, each go is shown separately —
+         they often differ, and the earlier ones say as much as the last.`
+      : `Each word here was scored on a single recording.`}
+      Tap the speaker to hear how the word sounds.</div>
   </div>`;
 }
 
@@ -277,6 +350,14 @@ function bindTechnicalToggle() {
     panel.style.display = show ? 'block' : 'none';
     btn.textContent = show ? 'Hide technical details' : 'Show technical details';
   });
+}
+
+/** Insight bullets may carry **bold** markers from the SLM. Escape first,
+ *  so nothing in the model's own text can inject a tag, then convert only
+ *  that one marker into <b> — no other markdown, no raw HTML ever passes
+ *  through. */
+function renderBold(s) {
+  return escapeHtml(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
 }
 
 function escapeHtml(s) {

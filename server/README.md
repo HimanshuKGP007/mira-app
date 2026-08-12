@@ -175,15 +175,20 @@ Body: `{"child_name": str|null, "target_phone": "s", "sessions": [...]}` where
 `sessions` is `store.sessions` from `core/rewards.js`, oldest first — the same
 session history the parent screen's tickers are already built from.
 
-Computes ordinary aggregate figures (accuracy %, by word position, trend
-across sessions — `insights.compute_analysis`, no model involved) and, if
-`GROQ_API_KEY` is set, asks Groq for 2-3 sentences describing *only* those
-numbers. The response is screened for clinical-claim language before it's
-returned; any failure — no key, network error, timeout, a forbidden word —
-falls back to a template sentence built from the same figures. The parent
-screen's tickers never depend on this endpoint; only the one narration card
-does, and it hides itself if the call fails outright.
+Computes ordinary aggregate figures (accuracy %, by word position, error type
+counts, positional error breakdown, retry recovery, trend across sessions —
+`insights.compute_analysis`, no model involved) and, if `GROQ_API_KEY` is
+set, asks Groq for 3-5 markdown bullet points describing *only* those
+numbers — practice volume, the hardest word position and what happens there,
+the overall error pattern, a genuine strength when the data supports one,
+and retry behaviour. Bullets the data doesn't support are skipped rather
+than padded. The response is screened for clinical-claim language before
+it's returned; any failure — no key, network error, timeout, a forbidden
+word, malformed JSON — falls back to an equivalent deterministic bullet list
+built from the same figures. The parent screen's tickers never depend on
+this endpoint; only the one narration card does, and it hides itself if the
+call fails outright.
 
 ```json
-{ "text": "...", "source": "llm", "analysis": { "...": "the numbers behind it" } }
+{ "bullets": ["...", "..."], "source": "llm", "analysis": { "...": "the numbers behind it" } }
 ```

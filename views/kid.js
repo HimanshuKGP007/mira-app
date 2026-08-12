@@ -17,6 +17,7 @@ import { store } from '../core/rewards.js';
 import { score, OUTCOME } from '../core/client.js';
 import { Recorder } from '../core/capture.js';
 import { GATES } from '../core/policy.js';
+import { listenButton, sayWord, stop as stopWord } from '../core/speech.js';
 
 const $ = s => document.querySelector(s);
 const REC_MS = 3000;
@@ -229,6 +230,9 @@ function renderWord(first) {
   $('#cardWord').innerHTML = idx >= 0
     ? `${w.slice(0, idx)}<b>${w[idx]}</b>${w.slice(idx + 1)}`
     : w;
+  // A model of the target, always available before recording and never
+  // played unless the child asks for it.
+  $('#listenRow').innerHTML = listenButton(w, { size: 'lg', label: 'Hear it' });
   miraState(null);
   hideAlert();
   armMic();
@@ -248,7 +252,17 @@ function armMic() {
   b.disabled = false;
   b.classList.remove('rec');
   $('#micHint').textContent = 'Tap and say it!';
+  setListenEnabled(true);
   busy = false;
+}
+
+/** The listen button is live whenever the mic is not. */
+function setListenEnabled(on) {
+  const row = $('#listenRow');
+  if (!row) return;
+  row.style.opacity = on ? '1' : '.4';
+  row.style.pointerEvents = on ? 'auto' : 'none';
+  row.querySelectorAll('button').forEach(b => { b.disabled = !on; });
 }
 function disarmMic() {
   const b = $('#micBtn');
@@ -274,6 +288,9 @@ async function onMic() {
 }
 
 function startRecording() {
+  // The model of the word must never end up inside the child's own recording.
+  stopWord();
+  setListenEnabled(false);
   recorder.start();
   const b = $('#micBtn');
   b.classList.add('rec');
@@ -361,11 +378,17 @@ function handleOutcome(res) {
     return;
   }
   if (res.outcome === OUTCOME.ERROR) {
+    logAttempt(it, { outcome: 'error', note: res.error });
     miraState(null);
     showAlert('err', res.error, true);
     return;
   }
   if (res.outcome === OUTCOME.RETRY) {
+    // A take the gate rejected is still part of the record: the adult views
+    // should be able to see that a word took four goes because two were
+    // unusable, not because the child failed twice more.
+    logAttempt(it, { outcome: 'retry', note: res.retry.message, reason: res.retry.reason,
+                     snrDb: res.retry.snrDb });
     miraState(null);
     showAlert('warn', res.retry.message, true);
     return;
@@ -390,15 +413,15 @@ function handleOutcome(res) {
   // A word can contain /s/ more than once ("sausage", "socks"). It only
   // counts as correct when every instance does; the position graph still
   // tracks each instance's own outcome separately (see core/rewards.js).
-  const verdict = targets.length
-    ? (targets.every(t => t.marking === 'correct') ? 'correct'
-       : targets.some(t => t.marking !== 'not_scored') ? 'substituted'
-       : 'not_scored')
-    : 'not_scored';
+  // The error verdict carries the actual marking the scorer gave — an
+  // omitted /s/ must not be flattened into "substituted", which is what the
+  // report then goes on to say about it.
+  const verdict = verdictFor(targets);
 
   const attemptConfidences = targets.map(t => t.confidence).filter(c => c != null);
   const worstThisAttempt = attemptConfidences.length ? Math.min(...attemptConfidences) : null;
   it.confidenceHistory.push(worstThisAttempt);
+  logAttempt(it, { outcome: 'scored', verdict, result });
 
   if (verdict === 'correct') {
     it.verdict = 'correct';
@@ -434,6 +457,9 @@ function handleOutcome(res) {
     ctx.sfx('soft');
     miraState(null);
     bubble(`Almost! Listen: ${it.word.text}. Your turn!`);
+    // Say it, rather than only promising to: the retry is the moment a model
+    // of the target is worth most. The chime finishes first.
+    setTimeout(() => sayWord(it.word.text).catch(() => {}), 700);
     setTimeout(() => {
       $('#picCard').className = 'pic-card';
       armMic();
@@ -447,6 +473,46 @@ function handleOutcome(res) {
   miraState(null);
   bubble('Good trying! We will practise that one again.');
   setTimeout(next, 1900);
+}
+
+/** The word's verdict from its /s/ instances, keeping the real marking.
+ *  'correct' only when every instance is; otherwise the first genuine error
+ *  marking (omitted / substituted / assimilated), never a stand-in for it. */
+function verdictFor(targets) {
+  if (!targets.length) return 'not_scored';
+  if (targets.every(t => t.marking === 'correct')) return 'correct';
+  const err = targets.find(t => ['omitted', 'substituted', 'assimilated'].includes(t.marking));
+  return err ? err.marking : 'not_scored';
+}
+
+/** Append one attempt to the item's permanent log. Every take is recorded,
+ *  including the ones the quality gate refused, and nothing is overwritten. */
+function logAttempt(it, { outcome, verdict = null, result = null, note = null,
+                          reason = null, snrDb = null }) {
+  if (!it) return;
+  it.attemptLog ||= [];
+  it.attemptLog.push({
+    n: it.attemptLog.length + 1,
+    at: new Date().toISOString(),
+    outcome,                                    // 'scored' | 'retry' | 'error'
+    verdict,
+    note,
+    reason,
+    snrDb: snrDb ?? result?.quality?.snrDb ?? null,
+    alignmentQuality: result?.quality?.alignmentQuality ?? null,
+    // one row per /s/ instance measured on THIS attempt
+    instances: (result?.targets ?? []).map(t => ({
+      position: t.position,
+      marking: t.marking,
+      confidence: t.confidence,
+      confidenceKind: t.confidenceKind,
+      substitute: t.substitute ?? null,
+      reason: t.reason ?? null,
+      durationMs: t.durationMs ?? null,
+      gop: t.gop ?? null,
+      recognized: t.recognized ?? null,
+    })),
+  });
 }
 
 const PRAISE = ['Clear! Lovely snake sound!', 'Perfect!', 'That was a great one!',
@@ -500,6 +566,7 @@ function showAlert(kind, message, retryable, opts = {}) {
   box.style.display = 'block';
   $('#retryBtn').style.display = retryable ? 'inline-block' : 'none';
   disarmMic();
+  setListenEnabled(true);        // hearing the word is still useful while the alert is up
   miraState(null);
   // don't leave Mira mid-thought while an alert explains what happened
   const el = $('#exBubble');
