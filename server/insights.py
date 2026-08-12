@@ -8,7 +8,7 @@ Two steps, both fail closed:
                        already stores client-side. No model, no torch import,
                        ships from numbers that are already on screen elsewhere.
 
-  narrate()            hands ONLY those numbers to Groq for 3-4 sentences.
+  narrate()            hands ONLY those numbers to Groq for 2-3 sentences.
                        Verified against a forbidden-word screen before it's
                        shown; any failure (no key, network, timeout, a
                        forbidden word) falls back to a template built from
@@ -44,21 +44,6 @@ def compute_analysis(sessions, target_phone):
     totals = {"scored": 0, "clear": 0, "flagged": 0, "not_scored": 0}
     by_position = {}
     substitute_counts = {}
-    # Counted over EVERY attempt, not just the one that ended each word.
-    # A word answered correctly on the third go, after the sound was replaced
-    # once and dropped once, used to contribute a single "clear" here and
-    # nothing else — the two errors on the way were not in the numbers the
-    # note was written from, so the note could not mention them.
-    marking_counts = {"correct": 0, "substituted": 0, "omitted": 0,
-                      "assimilated": 0, "not_scored": 0}
-    # Same markings, but split by where in the word they happened — a global
-    # "mostly omitted" figure can't tell a parent that the omissions are all
-    # at the end of words while the middle is fine; this can.
-    position_marking_counts = {}
-    attempts_total = 0
-    unusable_takes = 0
-    words_retried = 0
-    words_recovered = 0
 
     for s in sessions:
         totals["scored"] += s.get("scored", 0)
@@ -70,51 +55,15 @@ def compute_analysis(sessions, target_phone):
             bp["scored"] += v.get("scored", 0)
             bp["clear"] += v.get("clear", 0)
         for item in s.get("items", []):
-            attempts = item.get("attempts")
-            if not attempts:
-                # session recorded before the attempt log existed: the final
-                # instances are all there is, and are treated as one attempt.
-                attempts = [{"outcome": "scored", "instances": item.get("instances", []),
-                             "verdict": item.get("verdict")}]
-            scored_attempts = [a for a in attempts if a.get("outcome", "scored") == "scored"]
-            attempts_total += len(scored_attempts)
-            unusable_takes += len(attempts) - len(scored_attempts)
-            if len(scored_attempts) > 1:
-                words_retried += 1
-                if (scored_attempts[0].get("verdict") != "correct"
-                        and scored_attempts[-1].get("verdict") == "correct"):
-                    words_recovered += 1
-            for a in scored_attempts:
-                for inst in a.get("instances", []):
-                    marking = inst.get("marking")
-                    if marking in marking_counts:
-                        marking_counts[marking] += 1
-                    pos = inst.get("position")
-                    if pos and marking in marking_counts:
-                        pmc = position_marking_counts.setdefault(
-                            pos, {"correct": 0, "substituted": 0,
-                                  "omitted": 0, "assimilated": 0, "not_scored": 0})
-                        pmc[marking] += 1
-                    sub = inst.get("substitute")
-                    if sub:
-                        substitute_counts[sub] = substitute_counts.get(sub, 0) + 1
+            for inst in item.get("instances", []):
+                sub = inst.get("substitute")
+                if sub:
+                    substitute_counts[sub] = substitute_counts.get(sub, 0) + 1
 
     top_substitute = None
     if substitute_counts:
         sub, count = max(substitute_counts.items(), key=lambda kv: kv[1])
         top_substitute = {"sound": sub, "count": count}
-
-    # Which way the errors go is a different fact from how many there are, and
-    # the two call for different practice. Left out is not the same as swapped.
-    errors = {k: marking_counts[k] for k in ("substituted", "omitted", "assimilated")}
-    dominant_error = None
-    if any(errors.values()):
-        ranked = sorted(errors, key=lambda k: errors[k], reverse=True)
-        # A tie is not a dominant pattern. Saying "more often left out" when
-        # it happened exactly as often as the alternative would be inventing
-        # a finding out of a coin toss.
-        if len(ranked) < 2 or errors[ranked[0]] > errors[ranked[1]]:
-            dominant_error = ranked[0]
 
     accuracy_pct = (round(100 * totals["clear"] / totals["scored"])
                     if totals["scored"] else None)
@@ -122,38 +71,6 @@ def compute_analysis(sessions, target_phone):
         pos: (round(100 * v["clear"] / v["scored"]) if v["scored"] else None)
         for pos, v in by_position.items()
     }
-
-    # Enough attempts at a position before either praising or flagging it —
-    # a 1-for-1 "100%" or "0%" at some position is noise, not a finding.
-    MIN_POSITION_N = 4
-    qualifying_positions = {
-        pos: pct for pos, pct in position_pct.items()
-        if pct is not None and by_position[pos]["scored"] >= MIN_POSITION_N
-    }
-    # A strength worth naming: clearly ahead of the rest, not just nominally
-    # the best of a close field.
-    strongest_position = None
-    if qualifying_positions:
-        ranked_pos = sorted(qualifying_positions, key=lambda p: qualifying_positions[p], reverse=True)
-        best_pct = qualifying_positions[ranked_pos[0]]
-        runner_up_pct = qualifying_positions[ranked_pos[1]] if len(ranked_pos) > 1 else None
-        if best_pct >= 85 and (runner_up_pct is None or best_pct - runner_up_pct >= 10):
-            strongest_position = ranked_pos[0]
-
-    # Which error dominates at the weakest position specifically — "hardest
-    # at the end of words, and mostly left out there" is a different, more
-    # actionable finding than the global dominant_error.
-    weakest_position_error = None
-    if qualifying_positions:
-        weakest_pos = min(qualifying_positions, key=lambda p: qualifying_positions[p])
-        pmc = position_marking_counts.get(weakest_pos) or {}
-        perrors = {k: pmc.get(k, 0) for k in ("substituted", "omitted", "assimilated")}
-        if sum(perrors.values()) >= 3:
-            pranked = sorted(perrors, key=lambda k: perrors[k], reverse=True)
-            if perrors[pranked[0]] > perrors[pranked[1]]:
-                weakest_position_error = {
-                    "position": weakest_pos, "error": pranked[0], "count": perrors[pranked[0]],
-                }
 
     trend = None
     if n_sessions >= 2:
@@ -177,169 +94,75 @@ def compute_analysis(sessions, target_phone):
         "position_pct": position_pct,
         "trend": trend,
         "top_substitute": top_substitute,
-        "strongest_position": strongest_position,
-        "weakest_position_error": weakest_position_error,
-        # everything below is measured over every attempt, retries included
-        "attempts_total": attempts_total,
-        "unusable_takes": unusable_takes,
-        "words_retried": words_retried,
-        "words_recovered": words_recovered,
-        "marking_counts_all_attempts": marking_counts,
-        "position_marking_counts_all_attempts": position_marking_counts,
-        "error_counts_all_attempts": errors,
-        "dominant_error": dominant_error,
     }
 
 
-def _times(n):
-    return "once" if n == 1 else "twice" if n == 2 else "%d times" % n
-
-
-def template_bullets(analysis, child_name):
-    """Deterministic fallback: up to 5 bullet points, `**bold**`-marked on
-    the figures that matter, covering more than accuracy alone. Skips any
-    bullet its underlying data doesn't support — a first session with
-    almost nothing scored should come back short, not padded."""
+def template_narration(analysis, child_name):
     name = child_name or "Your child"
     phone = analysis["target_phone"]
     n = analysis["n_sessions"]
     acc = analysis["accuracy_pct"]
 
     if not n or acc is None:
-        return ["%s hasn't completed a scored practice session yet." % name]
-
-    bullets = []
+        return "%s hasn't completed a scored practice session yet." % name
 
     trend_phrase = {
-        "improving": ", and it's been trending up recently",
-        "declining": ", and it dipped a bit in the most recent session",
-        "steady": ", and it's held steady across sessions",
+        "improving": "and it's been trending up recently",
+        "declining": "and it's dipped a bit in the most recent session",
+        "steady": "and it's held steady across sessions",
     }.get(analysis["trend"], "")
-    bullets.append(
-        "%s has practiced the /%s/ sound over **%d session%s**, getting it "
-        "right **%d%%** of the time%s."
-        % (name, phone, n, "" if n == 1 else "s", acc, trend_phrase)
+
+    sentence = "%s has practiced the /%s/ sound over %d session%s, getting it right %d%% of the time%s%s." % (
+        name, phone, n, "" if n == 1 else "s", acc,
+        " so far" if not trend_phrase else "", (" " + trend_phrase) if trend_phrase else "",
     )
 
-    # The specific position+error combination beats a generic position
-    # breakdown when there's enough data for one — "hardest at the end,
-    # mostly left out there" is something a parent can actually listen for.
-    wpe = analysis.get("weakest_position_error")
-    if wpe:
-        how = {"omitted": "left out", "substituted": "swapped for another sound",
-               "assimilated": "blended into a neighbouring sound"}[wpe["error"]]
-        bullets.append(
-            "The /%s/ has been hardest at the **%s of words**, where it's most "
-            "often **%s** (%s)."
-            % (phone, POSITION_LABEL[wpe["position"]], how, _times(wpe["count"]))
-        )
-    else:
-        pos_bits = []
-        for pos in ("initial", "medial", "final"):
-            pct = analysis["position_pct"].get(pos)
-            if pct is not None:
-                pos_bits.append("**%d%%** at the %s" % (pct, POSITION_LABEL[pos]))
-        if pos_bits:
-            bullets.append("By word position, accuracy was " + ", ".join(pos_bits) + ".")
-
-    # Every attempt, not only the one that ended each word. Which way the
-    # errors went is the part a parent can actually listen for at home.
-    errors = analysis.get("error_counts_all_attempts") or {}
-    err_bits = []
-    if errors.get("omitted"):
-        err_bits.append("left out **%s**" % _times(errors["omitted"]))
-    if errors.get("substituted"):
-        sub = analysis.get("top_substitute")
-        err_bits.append("swapped for a different sound **%s**%s" % (
-            _times(errors["substituted"]),
-            ("" if not sub else
-             (", /%s/" % sub["sound"]) if errors["substituted"] == 1
-             else (", most often **/%s/**" % sub["sound"]))))
-    if errors.get("assimilated"):
-        err_bits.append("blended into a neighbouring sound **%s**" % _times(errors["assimilated"]))
-    total_attempts = analysis.get("attempts_total") or 0
-    if err_bits and total_attempts:
-        bullets.append(
-            "Across %s, the /%s/ was %s."
-            % ("the single recorded attempt" if total_attempts == 1
-               else "all %d recorded attempts" % total_attempts,
-               phone, " and ".join(err_bits))
-        )
-
-    # A strength is as much an insight as a weak spot — it tells a parent
-    # what's already working, not just what to fix.
-    sp = analysis.get("strongest_position")
-    if sp:
-        bullets.append(
-            "The /%s/ at the **%s of words** is solid, correct **%d%%** of the "
-            "time — a real strength to build on."
-            % (phone, POSITION_LABEL[sp], analysis["position_pct"][sp])
-        )
-
-    retried = analysis.get("words_retried") or 0
-    if retried:
-        recovered = analysis.get("words_recovered") or 0
-        bullets.append(
-            "**%d word%s** took more than one try, and **%s** got there by "
-            "the last attempt."
-            % (retried, "" if retried == 1 else "s",
-               "%d of them" % recovered if recovered else "none of them")
-        )
+    pos_bits = []
+    for pos in ("initial", "medial", "final"):
+        pct = analysis["position_pct"].get(pos)
+        if pct is not None:
+            pos_bits.append("%d%% at the %s" % (pct, POSITION_LABEL[pos]))
+    if pos_bits:
+        sentence += " By position: " + ", ".join(pos_bits) + "."
 
     if analysis["total_not_scored"]:
-        bullets.append(
-            "**%d sound%s** could not be measured reliably and were left "
-            "out of these numbers."
-            % (analysis["total_not_scored"], "" if analysis["total_not_scored"] == 1 else "s")
-        )
+        sentence += (" %d sound%s could not be measured reliably and were left out of these numbers."
+                      % (analysis["total_not_scored"], "" if analysis["total_not_scored"] == 1 else "s"))
 
-    return bullets[:5]
+    return sentence
 
 
-def _verify(bullets):
-    lowered = " ".join(bullets).lower()
+def _verify(text):
+    lowered = text.lower()
     return not any(w in lowered for w in FORBIDDEN_WORDS)
 
 
 def narrate(analysis, child_name=None):
-    """Returns (bullets, source) where bullets is a list of 1-5 markdown
-    strings (only `**bold**` allowed) and source is 'llm' or 'template'.
-    Never raises — any failure degrades to the template."""
-    fallback = template_bullets(analysis, child_name)
+    """Returns (text, source) where source is 'llm' or 'template'. Never
+    raises — any failure degrades to the template."""
+    fallback = template_narration(analysis, child_name)
 
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         return fallback, "template"
 
     prompt = (
-        "Write 3 to 5 short bullet points for a parent about their child's "
-        "speech practice. Cover more than accuracy alone - pick whichever of "
-        "these the data actually supports, skip any that aren't supported, "
-        "and never pad to hit 5:\n"
-        "- Practice volume: how many sessions and attempts, and the overall "
-        "accuracy trend.\n"
-        "- The hardest spot: which word position (start / middle / end) has "
-        "been hardest, and, using weakest_position_error if present, what "
-        "specifically happens there (left out vs swapped for another sound "
-        "vs blended into a neighbour) - these are different findings and "
-        "must not be conflated.\n"
-        "- The error pattern overall (error_counts_all_attempts, "
-        "top_substitute): omission and substitution are different problems, "
-        "name whichever dominates.\n"
-        "- A genuine strength: if strongest_position is set, or "
-        "words_recovered is a meaningful fraction of words_retried, say "
-        "what's going well - this matters as much as what's hard.\n"
-        "- Retry behaviour: whether words that took more than one attempt "
-        "usually got there in the end.\n\n"
-        "Rules: use ONLY the numbers given below, never invent one. Never "
+        "Write exactly 3 short sentences for a parent, in this fixed order, "
+        "each on its own line with no numbering or labels:\n"
+        "1. Practice count - how many sessions and words attempted, using "
+        "only the numbers given.\n"
+        "2. The pattern - name the specific word position (start / middle / "
+        "end of words) where practice has been hardest, using only the "
+        "numbers given. Phrase it as a plain observation, never as advice: "
+        "say 'practice has leaned toward...' or 'X has been trickiest at "
+        "the ...', never 'should', 'recommend', or 'suggest'.\n"
+        "3. One sentence connecting today's word choices to that pattern - "
+        "why practice today includes more of that kind of word.\n\n"
+        "Use ONLY the numbers given below - never invent a number, never "
         "use clinical language (no diagnosis, severity, disorder, condition, "
-        "treatment, therapy, or recommendations to see a specialist). Phrase "
-        "everything as a plain observation, never as advice - no 'should', "
-        "'recommend', or 'suggest'. Bold the key figures and terms in each "
-        "bullet using **double asterisks**, nothing fancier. Reply with "
-        "ONLY a JSON array of the bullet strings (no numbering, no "
-        "markdown list markers, no preamble, no explanation) - e.g. "
-        "[\"...\", \"...\"].\n\n"
+        "treatment, therapy, or recommendations to see a specialist). Output "
+        "ONLY the 3 sentences themselves - no preamble, no \"Here are...\", "
+        "no heading, no meta-commentary about the task.\n\n"
         "Child's name: %s\nData: %s"
         % (child_name or "the child", analysis)
     )
@@ -352,23 +175,18 @@ def narrate(analysis, child_name=None):
                 "model": GROQ_MODEL,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.4,
-                "max_tokens": 450,
+                "max_tokens": 200,
             },
             timeout=GROQ_TIMEOUT_S,
         )
         resp.raise_for_status()
-        raw = resp.json()["choices"][0]["message"]["content"].strip()
-        bullets = json.loads(raw)
+        text = resp.json()["choices"][0]["message"]["content"].strip()
     except Exception:                                  # noqa: BLE001
         return fallback, "template"
 
-    if (not isinstance(bullets, list) or not bullets
-            or not all(isinstance(b, str) and b.strip() for b in bullets)):
+    if not text or not _verify(text):
         return fallback, "template"
-    bullets = [b.strip() for b in bullets][:5]
-    if not _verify(bullets):
-        return fallback, "template"
-    return bullets, "llm"
+    return text, "llm"
 
 
 def select_next_words(analysis, word_bank):
@@ -394,31 +212,18 @@ def select_next_words(analysis, word_bank):
         % (top_sub["sound"], top_sub["count"], "" if top_sub["count"] == 1 else "s", top_sub["sound"])
         if top_sub else ""
     )
-    # Omission and substitution are different problems and want different
-    # words, so the selector is told which one dominates rather than being
-    # left to infer it from an accuracy percentage that cannot show it.
-    err_hint = ""
-    if analysis.get("dominant_error") == "omitted":
-        err_hint = (
-            "The child's errors are most often OMISSIONS - the /s/ is left "
-            "out of the word entirely (%d times), rather than replaced. "
-            "Prefer words where a dropped /s/ is unmistakable, such as final "
-            "position and /s/ clusters.\n\n"
-            % (analysis.get("error_counts_all_attempts") or {}).get("omitted", 0)
-        )
-
     prompt = (
         "A child is practicing the /s/ sound. Here is their practice data: "
-        "%s\n\n%s%s"
+        "%s\n\n%s"
         "Here is the full list of available practice words, each with "
         "an index, the word position of its /s/ sound, and its phone "
         "sequence: %s\n\n"
         "Reply with ONLY a JSON array of 4-6 word indices (integers from the "
         "list above) that would give the most useful next practice session, "
         "weighted toward whichever position has been hardest and, if given, "
-        "toward exposing the child's specific error pattern above. "
+        "toward exposing the child's specific substitution pattern above. "
         "Reply with ONLY the JSON array, nothing else - no explanation, no markdown."
-        % (analysis, sub_hint, err_hint, word_bank)
+        % (analysis, sub_hint, word_bank)
     )
 
     try:

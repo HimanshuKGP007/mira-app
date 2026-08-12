@@ -141,12 +141,12 @@ async def get_insights(payload: dict = Body(...)):
     word_bank = payload.get("word_bank") or []
 
     analysis = insights.compute_analysis(sessions, target_phone)
-    bullets, source = insights.narrate(analysis, child_name)
+    text, source = insights.narrate(analysis, child_name)
     next_words, selection_source = (
         insights.select_next_words(analysis, word_bank) if word_bank else ([], "rule")
     )
     return {
-        "bullets": bullets, "source": source,
+        "text": text, "source": source,
         "next_words": next_words, "selection_source": selection_source,
         "analysis": analysis,
     }

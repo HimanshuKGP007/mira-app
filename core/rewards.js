@@ -211,22 +211,13 @@ export function commitSession({ levelId, levelName, targetPhone, items, starsAlr
         word: i.word.text, position: i.word.position, verdict: i.verdict,
         struggling: i.attempts >= 3 && i.verdict !== 'correct',
         alignmentQuality: i.result?.quality?.alignmentQuality ?? null,
-        // one row per /s/ instance actually measured in this word, on the
-        // FINAL attempt. Kept for continuity with older records; `attempts`
-        // below is the full picture and is what the reports read.
+        // one row per /s/ instance actually measured in this word
         instances: targets.map(t => ({
           position: t.position, marking: t.marking,
           confidence: t.confidence, confidenceKind: t.confidenceKind,
           substitute: t.substitute ?? null, reason: t.reason ?? null,
           durationMs: t.durationMs ?? null, gop: t.gop ?? null,
-          recognized: t.recognized ?? null,
         })),
-        // Every attempt at this word, oldest first — a word tried three times
-        // holds three sets of markings, and they are frequently different
-        // ones. Storing only the last hid the substitution the child made on
-        // the way to getting it right, which is the part worth reading.
-        attemptCount: i.attempts,
-        attempts: i.attemptLog ?? [],
       };
     }),
   };

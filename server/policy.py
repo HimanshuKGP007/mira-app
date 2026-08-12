@@ -66,34 +66,6 @@ POST_MEAN_CORROBORATE = float(os.environ.get("MIRA_POST_MEAN_THRESHOLD", 0.50))
 GOP_RENORM_CORROBORATE = float(os.environ.get("MIRA_GOP_RENORM_THRESHOLD", -1.0))
 
 # --------------------------------------------------------------------------
-# omission
-# --------------------------------------------------------------------------
-# An omission cannot be read off the forced alignment alone, and trying to do
-# so was a real defect: forced alignment is obliged to place every canonical
-# phone somewhere, so a sound the child never said still receives a window,
-# and that window then reads as either "too short to measure" or as a
-# low-confidence substitution. /s/ dropped from "sun" came back as
-# not_scored; dropped from "sock" it came back as substituted. Never omitted.
-#
-# The fix uses the one signal that is already strong here — the model's own
-# unconstrained phone recognition. Over the phone's own window we ask what the
-# model actually recognised, independent of what the alignment was told to
-# expect:
-#     recognised == the target        -> the sound is there
-#     recognised == some other phone  -> something was said in its place
-#     recognised == nothing, or only
-#       a spill-over of a neighbour   -> nothing was said there at all
-# The last case, corroborated by a near-zero posterior for the target, is an
-# omission. Requiring both means a quiet-but-real production (weak posterior,
-# nothing recognised, but no neighbour occupying its window) is not called an
-# omission on posterior evidence alone.
-#
-# RECOGNITION_MIN_PROB keeps frame-level noise out of it: a greedy argmax at
-# 0.2 is not the model recognising a phone, it is the model shrugging.
-OMISSION_POST_CEILING = float(os.environ.get("MIRA_OMISSION_POST_CEILING", 0.20))
-RECOGNITION_MIN_PROB = float(os.environ.get("MIRA_RECOGNITION_MIN_PROB", 0.30))
-
-# --------------------------------------------------------------------------
 # per-phoneme reliability  [Stage 2 error_by_phoneme.csv, n >= 50]
 # --------------------------------------------------------------------------
 PHONEME_MAE = {
@@ -131,42 +103,18 @@ def is_withheld(phone_ipa):
 
 
 def decide_marking(*, post_max, duration_ms, substitute, withheld,
-                    post_mean=None, gop_renorm=None,
-                    recognized_is_target=False, recognized_is_neighbour=False,
-                    recognized=None, measurable=True):
+                    post_mean=None, gop_renorm=None):
     """The marking cascade. Distortion is a flag, never a marking; there is no
-    fifth column. Returns (marking, reason).
-
-    `recognized*` carry what the model's unconstrained decode heard over this
-    phone's own window (see the omission section above). They are evidence
-    about identity — which sound is there — while post_max is evidence about
-    quality. Identity is decided first, because a sound that was never
-    produced has no quality to measure.
-    """
+    fifth column. Returns (marking, reason)."""
     if withheld:
         return "not_scored", WITHHOLD_REASON
-
-    # OMISSION, decided before the duration and posterior gates below.
-    # It must run first: the evidence for an omission is the ABSENCE of a
-    # measurable segment, which those gates would otherwise consume as
-    # "too short to measure" or as a weak substitution.
-    if measurable and not recognized_is_target:
-        nothing_recognized = recognized is None or recognized_is_neighbour
-        no_posterior = post_max is None or post_max < OMISSION_POST_CEILING
-        if nothing_recognized and no_posterior:
-            return "omitted", None
-
     if post_max is None:
         return "not_scored", "no frames aligned to this sound"
     if duration_ms is not None and duration_ms < MIN_DURATION_MS:
         return "not_scored", "too short to measure"
-
-    # The decode named a different phone here and the target's own posterior
-    # does not contradict it: something was said, but not this sound.
-    if (recognized is not None and not recognized_is_target
-            and not recognized_is_neighbour and post_max < FLAG_THRESHOLD):
-        return "substituted", None
-
+    # An omission reads as a near-absent segment the model has no evidence for.
+    if duration_ms is not None and duration_ms < 40.0 and post_max < 0.20:
+        return "omitted", None
     if post_max < FLAG_THRESHOLD:
         if COMBINE_GOP_VARIANTS:
             corroborated = (

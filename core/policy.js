@@ -232,11 +232,6 @@ export function normalizeResponse(raw, { promptWord, targetPhone } = {}) {
       // set of GOP variants behind that single confidence number.
       durationMs: p.duration_ms ?? null,
       gop: p.gop ?? null,
-      // what the scorer's unconstrained decode heard over this phone's own
-      // window: {phone, prob, is_target, is_neighbour}, or null. This is the
-      // evidence behind an `omitted` marking, which otherwise has no number
-      // of its own to show — its whole case is that nothing was there.
-      recognized: p.recognized ?? null,
       // retained for the clinician view only; NEVER rendered as a number
       _rawScore: p.score ?? null,
     };

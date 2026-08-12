@@ -20,7 +20,6 @@
 import { icon } from './icons.js';
 import { store } from '../core/rewards.js';
 import { MARKINGS } from '../core/policy.js';
-import { listenButton } from '../core/speech.js';
 
 const $ = s => document.querySelector(s);
 const LS_CORRECTIONS = 'mira_corrections';
@@ -67,7 +66,6 @@ export function render() {
       Items marked <b>not scored</b> remain in the denominator; they are withheld, not passed.</div>
     </div>
     ${positionBreakdownCard(last)}
-    ${attemptSummaryCard(last)}
     <div class="card">
       <h3>${icon('target')}Items</h3>
       ${last.items.map((it, i) => itemBlock(it, `${last.at}#${i}`)).join('')}
@@ -99,148 +97,39 @@ function positionBreakdownCard(session) {
   </div>`;
 }
 
-/* --- every attempt counted, not just the one that ended the word --------
-   A word is allowed three attempts, and the retried ones carry most of the
-   information about what the child is actually doing: the outcome alone
-   cannot distinguish "clear first time" from "clear on the third go after
-   dropping the sound twice". These counts are over every scored attempt in
-   the session.                                                            */
-function attemptSummaryCard(session) {
-  const items = session.items || [];
-  const counts = { correct: 0, substituted: 0, omitted: 0, assimilated: 0, not_scored: 0 };
-  let takes = 0, unusable = 0, retried = 0, recovered = 0;
-
-  for (const it of items) {
-    const attempts = it.attempts && it.attempts.length ? it.attempts : null;
-    if (!attempts) continue;
-    const scored = attempts.filter(a => a.outcome === 'scored');
-    takes += scored.length;
-    unusable += attempts.length - scored.length;
-    if (scored.length > 1) retried++;
-    if (scored.length > 1 && scored[0].verdict !== 'correct'
-        && scored[scored.length - 1].verdict === 'correct') recovered++;
-    for (const a of scored) {
-      for (const inst of a.instances || []) {
-        if (counts[inst.marking] != null) counts[inst.marking]++;
-      }
-    }
-  }
-  if (!takes) return '';                       // pre-attempt-log session record
-
-  const kinds = ['correct', 'substituted', 'omitted', 'assimilated', 'not_scored']
-    .filter(k => counts[k])
-    .map(k => `<tr><td>${label(k)}</td><td>${counts[k]}</td></tr>`).join('');
-
-  return `
-  <div class="card">
-    <h3>${icon('chart')}Across all attempts, this session</h3>
-    <div class="denom">
-      <div class="box scored"><div class="n">${takes}</div><div class="l">scored takes</div></div>
-      <div class="box flagged"><div class="n">${retried}</div><div class="l">words retried</div></div>
-      <div class="box clear"><div class="n">${recovered}</div><div class="l">recovered</div></div>
-      <div class="box notscored"><div class="n">${unusable}</div><div class="l">unusable takes</div></div>
-    </div>
-    <table class="sheet" style="margin-top:10px"><thead><tr>
-      <th style="text-align:left">marking</th><th style="text-align:left">/s/ instances, all attempts</th>
-    </tr></thead><tbody>${kinds}</tbody></table>
-    <div class="note" style="margin-top:9px">"Recovered" means the first scored attempt was
-    not correct and the last one was. Every attempt keeps its own markings below; none is
-    overwritten by the one that followed it.</div>
-  </div>`;
-}
-
 function itemBlock(it, key) {
   const c = corrections.get(key);
   const shown = c ? c.clinician_said : it.verdict;
-
-  // Every attempt, oldest first. A word tried three times produced three
-  // separate measurements and they are routinely different ones — /s/
-  // substituted, then dropped, then clear. Reading only the last leaves the
-  // clinician looking at an outcome with its history deleted, so all of them
-  // are laid out here. Records written before attempts were kept fall back
-  // to the single final set of instances they do have.
-  const attempts = (it.attempts && it.attempts.length)
-    ? it.attempts
-    : [{ n: 1, outcome: 'scored', verdict: it.verdict, instances: it.instances || [] }];
-  const scoredAttempts = attempts.filter(a => a.outcome !== 'retry' && a.outcome !== 'error');
-  const multi = attempts.length > 1;
-
-  const blocks = attempts.map(a => {
-    const isFinal = a === scoredAttempts[scoredAttempts.length - 1];
-    if (a.outcome === 'retry' || a.outcome === 'error') {
-      return `
-      <div class="attempt-block">
-        <div class="attempt-head">take ${a.n}
-          <span class="not_scored">&middot; not usable${a.reason ? ` (${escapeHtml(a.reason)})` : ''}</span></div>
-        <div class="why">${escapeHtml(a.note || 'The quality gate rejected this recording; it was never scored.')}</div>
-      </div>`;
-    }
-    const rows = (a.instances && a.instances.length ? a.instances : [it]).map(instRow).join('');
+  const rows = (it.instances && it.instances.length ? it.instances : [it]).map(inst => {
+    const marking = inst.marking || inst.verdict;
+    const gop = inst.gop;
     return `
-    <div class="attempt-block">
-      ${multi ? `<div class="attempt-head">attempt ${a.n}
-        ${isFinal ? '<span class="final">&middot; final</span>' : ''}</div>` : ''}
-      <table class="sheet"><tbody>${rows}</tbody></table>
-    </div>`;
+    <tr>
+      <td style="width:34px"><span class="tgt">s</span><span class="p" style="font-size:10px;display:block">${inst.position || ''}</span></td>
+      <td>
+        <span class="pill ${marking}">${label(marking)}</span>
+        ${inst.substitute && marking === 'substituted' ? `<span class="sub"> &rarr; ${inst.substitute}</span>` : ''}
+        ${inst.reason && marking === 'not_scored' ? `<div class="why">${inst.reason}</div>` : ''}
+        ${gop ? `<div style="margin-top:4px;font-size:10.5px;color:var(--ink-faint);font-family:var(--font-ui)">
+          post_max ${fmt(gop.post_max)} &middot; post_mean ${fmt(gop.post_mean)} &middot;
+          gop_max ${fmt(gop.gop_max)} &middot; gop_mean ${fmt(gop.gop_mean)} &middot; gop_renorm ${fmt(gop.gop_renorm)}
+          ${inst.durationMs != null ? ` &middot; window ${inst.durationMs}ms` : ''}</div>` : ''}
+      </td>
+      <td style="width:52px;text-align:right">
+        <span class="conf">${inst.confidence != null ? inst.confidence.toFixed(2) : '-'}</span>
+      </td>
+    </tr>`;
   }).join('');
-
   return `
   <div class="wordblock" data-key="${key}">
-    <div class="wh"><span class="w">${escapeHtml(it.word)}</span>
-      ${listenButton(it.word, { size: 'sm' })}
-      <span class="p">${it.position}${it.struggling ? ' &middot; <span style="color:var(--amber-d)">no improvement across attempts</span>' : ''}</span></div>
-    ${multi ? attemptTrail(attempts) : ''}
-    ${blocks}
+    <div class="wh"><span class="w">${it.word}</span><span class="p">${it.position}${it.struggling ? ' &middot; <span style="color:var(--amber-d)">no improvement across attempts</span>' : ''}</span></div>
+    <table class="sheet"><tbody>${rows}</tbody></table>
     ${c ? `<div class="audit">clinician override &middot; Mira said <s>${label(c.mira_said)}</s>,
            you marked <b>${label(c.clinician_said)}</b></div>` : ''}
     <div class="override">
       ${MARKINGS.map(m => `<button data-m="${m}" class="${m === shown ? 'on' : ''}">${label(m)}</button>`).join('')}
     </div>
   </div>`;
-}
-
-function instRow(inst) {
-  const marking = inst.marking || inst.verdict;
-  const gop = inst.gop;
-  const rec = inst.recognized;
-  return `
-  <tr>
-    <td style="width:34px"><span class="tgt">s</span><span class="p" style="font-size:10px;display:block">${inst.position || ''}</span></td>
-    <td>
-      <span class="pill ${marking}">${label(marking)}</span>
-      ${inst.substitute && marking === 'substituted' ? `<span class="sub"> &rarr; ${escapeHtml(inst.substitute)}</span>` : ''}
-      ${inst.reason && marking === 'not_scored' ? `<div class="why">${escapeHtml(inst.reason)}</div>` : ''}
-      ${marking === 'omitted' ? `<div class="why">no /s/ recognised in this window${
-          rec && rec.phone ? ` &mdash; the model heard /${escapeHtml(rec.phone)}/ here${rec.is_neighbour ? ', the neighbouring sound spilling in' : ''}` : ' and nothing else either'}</div>` : ''}
-      ${gop ? `<div style="margin-top:4px;font-size:10.5px;color:var(--ink-faint);font-family:var(--font-ui)">
-        post_max ${fmt(gop.post_max)} &middot; post_mean ${fmt(gop.post_mean)} &middot;
-        gop_max ${fmt(gop.gop_max)} &middot; gop_mean ${fmt(gop.gop_mean)} &middot; gop_renorm ${fmt(gop.gop_renorm)}
-        ${inst.durationMs != null ? ` &middot; window ${inst.durationMs}ms` : ''}
-        ${rec && rec.phone ? ` &middot; heard /${escapeHtml(rec.phone)}/ ${fmt(rec.prob)}` : ' &middot; heard nothing'}</div>` : ''}
-    </td>
-    <td style="width:52px;text-align:right">
-      <span class="conf">${inst.confidence != null ? inst.confidence.toFixed(2) : '-'}</span>
-    </td>
-  </tr>`;
-}
-
-/** The shape of the word across its attempts, in one line. */
-function attemptTrail(attempts) {
-  const chips = attempts.map(a => {
-    if (a.outcome === 'retry' || a.outcome === 'error') {
-      return `<span class="attempt-chip retry"><span class="n">${a.n}</span>not usable</span>`;
-    }
-    const v = a.verdict || 'not_scored';
-    const sub = (a.instances || []).find(i => i.substitute)?.substitute;
-    return `<span class="attempt-chip ${v}"><span class="n">${a.n}</span>${label(v)}${
-      sub ? ` &rarr; ${escapeHtml(sub)}` : ''}</span>`;
-  });
-  return `<div class="attempts">${chips.join('<span class="attempt-arrow">&rsaquo;</span>')}</div>`;
-}
-
-function escapeHtml(s) {
-  return String(s ?? '').replace(/[&<>"']/g, ch =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
 }
 
 function fmt(n) { return n == null ? '-' : n.toFixed(3); }

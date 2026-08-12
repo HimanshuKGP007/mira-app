@@ -327,11 +327,6 @@ def score_utterance(raw_bytes, prompt_word, speaker_age_years=None):
         post_max = None
         duration_ms = None
         substitute = None
-        recognized = None
-        recognized_id = None
-        recognized_prob = None
-        recognized_is_target = False
-        recognized_is_neighbour = False
         gop = {}
 
         if lo is not None and hi is not None and hi > lo and tid is not None:
@@ -345,29 +340,11 @@ def score_utterance(raw_bytes, prompt_word, speaker_age_years=None):
             substitute = _substitute_for(logprobs, lo, hi, set(target_sets[k]),
                                          blank_id, st["id2token"])
 
-            # What the model recognises here with no target imposed on it.
-            # This is the evidence that separates "said something else" from
-            # "said nothing at all" — forced alignment cannot, because it is
-            # obliged to place the canonical phone somewhere regardless.
-            recognized_id, recognized_prob = _recognized_in_span(logprobs, lo, hi, blank_id)
-            if recognized_id is not None:
-                recognized = st["id2token"].get(recognized_id)
-                recognized_is_target = recognized_id in set(target_sets[k])
-                recognized_is_neighbour = _is_neighbour(recognized_id, target_sets, k)
-
         marking, reason = policy.decide_marking(
             post_max=post_max, duration_ms=duration_ms,
             substitute=substitute, withheld=withheld,
             post_mean=gop.get("post_mean"), gop_renorm=gop.get("gop_renorm"),
-            recognized=recognized, recognized_is_target=recognized_is_target,
-            recognized_is_neighbour=recognized_is_neighbour,
-            measurable=tid is not None,
         )
-        # Name the substitute from the unconstrained decode when it has one:
-        # that is a recognised phone, where `substitute` is a frame-count
-        # argmax that can be dominated by a neighbour spilling into the window.
-        if marking == "substituted" and recognized and not recognized_is_target:
-            substitute = recognized
         if marking != "substituted":
             substitute = None
         if tid is None and marking == "not_scored" and reason is None:
@@ -386,16 +363,6 @@ def score_utterance(raw_bytes, prompt_word, speaker_age_years=None):
         }
         if substitute:
             entry["substitute"] = substitute
-        if recognized:
-            # kept on every phone, not just the flagged ones: it is the
-            # evidence behind an omission, and an omission has no other
-            # number to show for itself.
-            entry["recognized"] = {
-                "phone": recognized,
-                "prob": _round(recognized_prob),
-                "is_target": recognized_is_target,
-                "is_neighbour": recognized_is_neighbour,
-            }
         if reason:
             entry["reason"] = reason
         if gop:
@@ -489,44 +456,6 @@ def _best_class_member(logprobs, lo, hi, ids):
         return ids[0]
     win = logprobs[lo:hi]
     return max(ids, key=lambda i: float(win[:, i].max()))
-
-
-def _recognized_in_span(logprobs, lo, hi, blank_id):
-    """The phone the model recognises over this window, with no target imposed.
-
-    Returns (token_id, probability) for the single strongest non-blank frame in
-    the window, or (None, None) when nothing in it clears
-    policy.RECOGNITION_MIN_PROB. CTC is peaky, so a produced phone shows up as a
-    confident spike on one or two frames; taking the strongest spike is
-    therefore the right reading, and it is what makes an omission visible —
-    a sound that was never said leaves no spike behind.
-    """
-    win = logprobs[lo:hi]
-    if win.size == 0:
-        return None, None
-    arg = win.argmax(axis=1)
-    best = win.max(axis=1)
-    mask = arg != blank_id
-    if not mask.any():
-        return None, None
-    idx = int(np.flatnonzero(mask)[int(np.argmax(best[mask]))])
-    prob = float(np.exp(best[idx]))
-    if prob < policy.RECOGNITION_MIN_PROB:
-        return None, None
-    return int(arg[idx]), prob
-
-
-def _is_neighbour(token_id, target_sets, k):
-    """Is this token just the phone before or after spilling into the window?
-
-    Forced-alignment boundaries are approximate, so the frames given to an
-    omitted phone are usually the tail of its neighbour. Recognising the
-    neighbour there is evidence of an omission, never of a substitution.
-    """
-    for j in (k - 1, k + 1):
-        if 0 <= j < len(target_sets) and token_id in set(target_sets[j]):
-            return True
-    return False
 
 
 def _substitute_for(logprobs, lo, hi, target_ids, blank_id, id2token):
