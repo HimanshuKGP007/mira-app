@@ -65,12 +65,13 @@ function insightsCardShell() {
   </div>`;
 }
 
-/* --- why today's practice looks this way: descriptive, never "suggest" --- */
+/* --- today's practice trail: which words, not a repeat of the note above -- */
 function whyExercisesCard() {
   return `
   <div class="card" id="whyCard" style="display:none">
-    <h3>${icon('target')}Why today's practice looks this way</h3>
+    <h3>${icon('target')}Today's practice trail</h3>
     <div class="note" id="whyBody"></div>
+    <div id="whyWords" style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px"></div>
   </div>`;
 }
 
@@ -92,14 +93,19 @@ async function loadInsights(targetPhone) {
     const data = await res.json();
     el.textContent = data.text;
 
-    const lines = data.text.split('\n').map(s => s.trim()).filter(Boolean);
-    if (lines.length >= 3) {
-      const whyCard = $('#whyCard');
-      const whyBody = $('#whyBody');
-      if (whyCard && whyBody) { whyBody.textContent = lines[2]; whyCard.style.display = ''; }
-    }
     if (Array.isArray(data.next_words) && data.next_words.length) {
       store.nextWords = data.next_words;
+      const whyCard = $('#whyCard');
+      const whyBody = $('#whyBody');
+      const whyWords = $('#whyWords');
+      if (whyCard && whyBody && whyWords) {
+        whyBody.textContent = 'Mira picked out these words for the next practice trail, based on recent patterns.';
+        whyWords.innerHTML = data.next_words
+          .map(i => WORDS[i]).filter(Boolean)
+          .map(w => `<span class="pill" style="color:var(--vio-d);font-size:13px;padding:6px 13px">${escapeHtml(w.text)}</span>`)
+          .join('');
+        whyCard.style.display = '';
+      }
     }
   } catch {
     // The tickers above already show the real numbers; losing the note is
@@ -112,7 +118,7 @@ async function loadInsights(targetPhone) {
 /* --- last session: the scored / not-scored pair leads ---------------------- */
 function lastSessionCard(r, name) {
   const items = r.items.map(i => ({ word: { text: i.word, position: i.position }, verdict: i.verdict, result: null }));
-  const fb = feedbackForSession(items.map(i => ({ ...i, result: {} })), 's');
+  const fb = feedbackForSession(items.map(i => ({ ...i, result: {} })), 's', name);
   const when = new Date(r.at);
 
   return `
@@ -232,11 +238,9 @@ function aboutCard(scorer) {
   const baseline = scorer && scorer.tier === 'gop_baseline';
   return `
   <div class="card">
-    <h3>${icon('shield')}What Mira can and cannot tell you</h3>
-    <div class="pitch">
-      Mira is a practice aid, not an assessment. It can miss real errors or flag a sound that was
-      fine, and it says <b>not scored</b> rather than guess on sounds it measures poorly.
-      It does not diagnose, rate severity, or replace a speech-language pathologist.
+    <div class="note" style="display:flex;gap:9px;align-items:flex-start">
+      <span style="flex:0 0 auto">${icon('shield')}</span>
+      <span>Not a diagnosis: a practice tool to help your child's pronunciation improve over time.</span>
     </div>
     <button class="btn-ghost" id="toggleTechnical" style="width:100%;margin-top:11px">Show technical details</button>
     <div class="note" id="technicalDetails" style="margin-top:10px;display:none">
