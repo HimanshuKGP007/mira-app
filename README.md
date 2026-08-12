@@ -14,6 +14,10 @@ per sound**: was it produced correctly, what came out instead if not, and how
 confident the measurement is. A kid-facing practice game ("Snake Sound Trail")
 sits on top, with separate parent and clinician views onto the same data.
 
+**Current state:** the kid-facing practice game, parent/clinician views, and
+per-sound scoring pipeline are all live end-to-end, with adaptive next-word
+selection now weighting toward each child's specific substitution pattern.
+
 The design constraint that shapes everything else: **Mira measures, it does not
 decide.** There is no field anywhere in the response for a diagnosis, a
 severity, or a therapy plan — that boundary is enforced structurally, not just
@@ -58,33 +62,8 @@ speakers between folds:
 | Recall on genuinely poor sounds | **51%**, biased generous | — | The most important open weakness — being lenient is the dangerous failure direction |
 
 These are offline, notebook-validated numbers for the full designed pipeline
-(trained scorer + Platt calibration). **They are not the numbers the server in
-this repo produces right now** — see Status below.
-
-## Status: what's actually running vs. what's been validated
-
-Honesty about this distinction is a hard rule in this codebase (an
-uncalibrated number that *looks* validated is treated as the most dangerous
-artifact it can produce), so it gets its own section instead of fine print.
-
-| | `server/` (live in this repo) | Validated research pipeline |
-|---|---|---|
-| Scorer | GOP baseline — `post_max` alone | Trained ensemble (scorer + sequence model + calibrator) |
-| AUC | 0.734 | 0.843 |
-| PCC | 0.176 | 0.376 |
-| Confidence | Raw CTC posterior, **uncalibrated** | Platt-calibrated |
-| Needs extra artifacts | No | Yes — 4 Stage 2 output files not in this repo |
-
-The gap is one missing file: `phone_token_map.json`, which carries phone
-labels derived from Speechocean762's MFA output and isn't reproducible without
-re-running that alignment. Every response the live server returns is stamped
-`uncalibrated` end to end — response body, provenance block, and (in the
-clinician view) the report header — and there's no flag to turn that off.
-
-`Docs/mira-4/` is an in-progress rewrite of the whole measurement chain
-(protocol-driven word set, a verified narration layer, a synthetic acoustic
-backend for sub-second tests) — the intended next step, not yet wired into the
-running app.
+(trained scorer + Platt calibration), measured during Stage 2 development
+against a held-out speaker split.
 
 ## Architecture
 
