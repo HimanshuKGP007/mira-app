@@ -59,7 +59,7 @@ export function render() {
         <div class="box flagged"><div class="n">${totals.scored - totals.correct}</div><div class="l">in error</div></div>
       </div>
       <div class="note" style="margin-top:10px">Target sound <b>/s/</b>, single-word citation forms.
-      Items marked <b>not scored</b> remain in the denominator — they are withheld, not passed.</div>
+      Items marked <b>not scored</b> remain in the denominator; they are withheld, not passed.</div>
     </div>
     <div class="card">
       <h3>${icon('target')}Items</h3>
@@ -74,25 +74,27 @@ export function render() {
 function itemBlock(it, key) {
   const c = corrections.get(key);
   const shown = c ? c.clinician_said : it.verdict;
+  const rows = (it.instances && it.instances.length ? it.instances : [it]).map(inst => `
+    <tr>
+      <td style="width:34px"><span class="tgt">s</span><span class="p" style="font-size:10px;display:block">${inst.position || ''}</span></td>
+      <td>
+        <span class="pill ${inst.marking || inst.verdict}">${label(inst.marking || inst.verdict)}</span>
+        ${inst.substitute && (inst.marking || inst.verdict) === 'substituted' ? `<span class="sub"> &rarr; ${inst.substitute}</span>` : ''}
+        ${inst.reason && (inst.marking || inst.verdict) === 'not_scored' ? `<div class="why">${inst.reason}</div>` : ''}
+      </td>
+      <td style="width:52px;text-align:right">
+        <span class="conf">${inst.confidence != null ? inst.confidence.toFixed(2) : '-'}</span>
+      </td>
+    </tr>`).join('');
   return `
   <div class="wordblock" data-key="${key}">
     <div class="wh"><span class="w">${it.word}</span><span class="p">${it.position}</span></div>
-    <table class="sheet"><tbody><tr>
-      <td style="width:34px"><span class="tgt">s</span></td>
-      <td>
-        <span class="pill ${shown}">${label(shown)}</span>
-        ${it.substitute && shown === 'substituted' ? `<span class="sub"> → ${it.substitute}</span>` : ''}
-        ${it.reason && shown === 'not_scored' ? `<div class="why">${it.reason}</div>` : ''}
-        ${c ? `<div class="audit">clinician override · Mira said <s>${label(c.mira_said)}</s>,
-               you marked <b>${label(c.clinician_said)}</b></div>` : ''}
-        <div class="override">
-          ${MARKINGS.map(m => `<button data-m="${m}" class="${m === shown ? 'on' : ''}">${label(m)}</button>`).join('')}
-        </div>
-      </td>
-      <td style="width:52px;text-align:right">
-        <span class="conf">${it.confidence != null ? it.confidence.toFixed(2) : '—'}</span>
-      </td>
-    </tr></tbody></table>
+    <table class="sheet"><tbody>${rows}</tbody></table>
+    ${c ? `<div class="audit">clinician override &middot; Mira said <s>${label(c.mira_said)}</s>,
+           you marked <b>${label(c.clinician_said)}</b></div>` : ''}
+    <div class="override">
+      ${MARKINGS.map(m => `<button data-m="${m}" class="${m === shown ? 'on' : ''}">${label(m)}</button>`).join('')}
+    </div>
   </div>`;
 }
 

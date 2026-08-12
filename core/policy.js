@@ -237,7 +237,10 @@ export function normalizeResponse(raw, { promptWord, targetPhone } = {}) {
     promptWord: raw?.prompt_word ?? promptWord ?? null,
     targetPhone: targetPhone ?? null,
     phones,
-    target: phones.find(p => p.isTarget) ?? null,
+    // every /s/-family instance in the word, in phone order — a word like
+    // "sausage" has two. Never collapse to one: that silently drops data
+    // the scorer already measured.
+    targets: phones.filter(p => p.isTarget),
     quality: {
       passed: raw?.quality_gate?.passed !== false,
       snrDb: raw?.quality_gate?.snr_db ?? raw?.snr_db ?? null,
@@ -280,7 +283,7 @@ export function feedbackForSession(items, targetPhone) {
   if (!scored.length) {
     return {
       headline: `Nothing could be scored this time.`,
-      detail: `All ${done.length} recordings were set aside — usually background noise or a very quiet mic. Try somewhere quieter.`,
+      detail: `All ${done.length} recordings were set aside, usually background noise or a very quiet mic. Try somewhere quieter.`,
       practise: [],
     };
   }
@@ -300,7 +303,7 @@ export function feedbackForSession(items, targetPhone) {
   } else {
     headline = `Your /${targetPhone}/ was flagged in ${flagged.length} of ${scored.length} scored words.`;
     detail = worstPos && worstPos[1].length > 1
-      ? `Most often at the ${worstPos[0]} of the word — ${worstPos[1].join(', ')}.`
+      ? `Most often at the ${worstPos[0]} of the word: ${worstPos[1].join(', ')}.`
       : `Flagged in: ${flagged.map(i => i.word.text).join(', ')}.`;
   }
 
@@ -308,7 +311,7 @@ export function feedbackForSession(items, targetPhone) {
     headline,
     detail,
     notScoredNote: notScored.length
-      ? `${notScored.length} ${notScored.length === 1 ? 'word was' : 'words were'} not scored — Mira declines rather than guessing.`
+      ? `${notScored.length} ${notScored.length === 1 ? 'word was' : 'words were'} not scored; Mira declines rather than guessing.`
       : null,
     practise: flagged.map(i => i.word.text),
   };

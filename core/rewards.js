@@ -142,13 +142,19 @@ export function commitSession({ levelId, levelName, targetPhone, items, starsAlr
     clear: clear.length,
     flagged: scored.length - clear.length,
     byPosition: byPosition(done),
-    items: done.map(i => ({
-      word: i.word.text, position: i.word.position, verdict: i.verdict,
-      substitute: i.result?.target?.substitute ?? null,
-      confidence: i.result?.target?.confidence ?? null,
-      confidenceKind: i.result?.target?.confidenceKind ?? null,
-      reason: i.result?.target?.reason ?? null,
-    })),
+    items: done.map(i => {
+      const targets = i.result?.targets ?? [];
+      return {
+        word: i.word.text, position: i.word.position, verdict: i.verdict,
+        struggling: i.attempts >= 3 && i.verdict !== 'correct',
+        // one row per /s/ instance actually measured in this word
+        instances: targets.map(t => ({
+          position: t.position, marking: t.marking,
+          confidence: t.confidence, confidenceKind: t.confidenceKind,
+          substitute: t.substitute ?? null, reason: t.reason ?? null,
+        })),
+      };
+    }),
   };
   store.sessions = [...store.sessions, record];
 
@@ -156,13 +162,22 @@ export function commitSession({ levelId, levelName, targetPhone, items, starsAlr
   return { earnedStars, earnedXp, crowns, badges, record };
 }
 
+/** Buckets by each /s/ instance's own position, not the word's overall tag —
+ * a word like "sausage" contributes to two buckets (initial and medial). */
 function byPosition(items) {
   const out = {};
   for (const i of items) {
-    const p = i.word.position;
-    out[p] ||= { scored: 0, clear: 0, notScored: 0 };
-    if (i.verdict === 'not_scored') out[p].notScored++;
-    else { out[p].scored++; if (i.verdict === 'correct') out[p].clear++; }
+    const targets = i.result?.targets;
+    const rows = (targets && targets.length)
+      ? targets.map(t => ({ position: t.position, marking: t.marking }))
+      : [{ position: i.word.position, marking: i.verdict }];
+    for (const r of rows) {
+      const p = r.position;
+      if (!p) continue;
+      out[p] ||= { scored: 0, clear: 0, notScored: 0 };
+      if (r.marking === 'not_scored') out[p].notScored++;
+      else { out[p].scored++; if (r.marking === 'correct') out[p].clear++; }
+    }
   }
   return out;
 }

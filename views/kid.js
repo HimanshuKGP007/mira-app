@@ -55,12 +55,14 @@ export function hudHTML() {
   const p = rewards.xpInLevel() / rewards.XP_PER_LEVEL;
   const r = 19, c = 2 * Math.PI * r;
   const crowns = Object.values(store.levels).reduce((a, l) => a + (l.crowns || 0), 0);
+  const trailsDone = Object.values(store.levels).filter(l => l.done).length;
   return `
     <div class="lvl-ring"><svg viewBox="0 0 44 44">
       <circle cx="22" cy="22" r="${r}" fill="none" stroke="#D9DEEC" stroke-width="5"/>
       <circle cx="22" cy="22" r="${r}" fill="none" stroke="#7A6CF0" stroke-width="5"
         stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - p)}"/>
     </svg><b>${rewards.explorerLevel()}</b></div>
+    <div class="stat">${icon('trophy', 18)}<span>${trailsDone}/${LEVELS.length}</span></div>
     <div class="stat">${icon('star', 18)}<span>${store.stars}</span></div>
     <div class="stat">${icon('crown', 18)}<span>${crowns}/${LEVELS.length * 3}</span></div>`;
 }
@@ -336,7 +338,7 @@ function handleOutcome(res) {
 
   // scored
   const result = res.result;
-  const target = result.target;
+  const targets = result.targets || [];
   it.result = result;
   it.attempts++;
 
@@ -350,7 +352,14 @@ function handleOutcome(res) {
     return;
   }
 
-  const verdict = target ? target.marking : 'not_scored';
+  // A word can contain /s/ more than once ("sausage", "socks"). It only
+  // counts as correct when every instance does; the position graph still
+  // tracks each instance's own outcome separately (see core/rewards.js).
+  const verdict = targets.length
+    ? (targets.every(t => t.marking === 'correct') ? 'correct'
+       : targets.some(t => t.marking !== 'not_scored') ? 'substituted'
+       : 'not_scored')
+    : 'not_scored';
 
   if (verdict === 'correct') {
     it.verdict = 'correct';
@@ -379,7 +388,7 @@ function handleOutcome(res) {
     paint('flagged');
     ctx.sfx('soft');
     miraState(null);
-    bubble(`Almost! Listen — ${it.word.text}. Your turn!`);
+    bubble(`Almost! Listen: ${it.word.text}. Your turn!`);
     setTimeout(() => {
       $('#picCard').className = 'pic-card';
       armMic();
