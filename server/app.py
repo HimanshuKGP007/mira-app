@@ -105,21 +105,33 @@ async def score(
 
 @app.post("/insights")
 async def get_insights(payload: dict = Body(...)):
-    """Turns session history the app already has into a parent-facing note.
+    """Turns session history the app already has into a parent-facing note,
+    plus a guarded pick of which words the next level should weight toward.
 
-    Body: {"child_name": str|None, "target_phone": str, "sessions": [...]}
-    where `sessions` is store.sessions from core/rewards.js, oldest first.
-    Never scores anything itself; ordinary arithmetic plus an optional,
-    verified LLM sentence on top. Falls back to a template if Groq is
-    unavailable, so this endpoint always returns something.
+    Body: {"child_name": str|None, "target_phone": str, "sessions": [...],
+    "word_bank": [{"index": int, "text": str, "position": str}, ...]}
+    where `sessions` is store.sessions from core/rewards.js, oldest first,
+    and `word_bank` mirrors core/exercise.js's WORDS. Never scores anything
+    itself; ordinary arithmetic plus an optional, verified LLM sentence and
+    an optional, guardrailed word selection on top. Falls back to a
+    template/rule if Groq is unavailable, so this endpoint always returns
+    something.
     """
     sessions = payload.get("sessions") or []
     target_phone = payload.get("target_phone") or "s"
     child_name = payload.get("child_name")
+    word_bank = payload.get("word_bank") or []
 
     analysis = insights.compute_analysis(sessions, target_phone)
     text, source = insights.narrate(analysis, child_name)
-    return {"text": text, "source": source, "analysis": analysis}
+    next_words, selection_source = (
+        insights.select_next_words(analysis, word_bank) if word_bank else ([], "rule")
+    )
+    return {
+        "text": text, "source": source,
+        "next_words": next_words, "selection_source": selection_source,
+        "analysis": analysis,
+    }
 
 
 # --------------------------------------------------------------------------

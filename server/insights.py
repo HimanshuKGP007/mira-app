@@ -16,6 +16,7 @@ Two steps, both fail closed:
                        Groq being reachable.
 """
 
+import json
 import os
 
 import requests
@@ -134,12 +135,22 @@ def narrate(analysis, child_name=None):
         return fallback, "template"
 
     prompt = (
-        "Write 2-3 short, warm sentences for a parent summarizing their "
-        "child's speech sound practice. Use ONLY the numbers given below - "
-        "never invent a number, never suggest what to practice next, never "
+        "Write exactly 3 short sentences for a parent, in this fixed order, "
+        "each on its own line with no numbering or labels:\n"
+        "1. Practice count - how many sessions and words attempted, using "
+        "only the numbers given.\n"
+        "2. The pattern - name the specific word position (start / middle / "
+        "end of words) where practice has been hardest, using only the "
+        "numbers given. Phrase it as a plain observation, never as advice: "
+        "say 'practice has leaned toward...' or 'X has been trickiest at "
+        "the ...', never 'should', 'recommend', or 'suggest'.\n"
+        "3. One sentence connecting today's word choices to that pattern - "
+        "why practice today includes more of that kind of word.\n\n"
+        "Use ONLY the numbers given below - never invent a number, never "
         "use clinical language (no diagnosis, severity, disorder, condition, "
-        "treatment, therapy, or recommendations to see a specialist). Just "
-        "describe the numbers factually and encouragingly.\n\n"
+        "treatment, therapy, or recommendations to see a specialist). Output "
+        "ONLY the 3 sentences themselves - no preamble, no \"Here are...\", "
+        "no heading, no meta-commentary about the task.\n\n"
         "Child's name: %s\nData: %s"
         % (child_name or "the child", analysis)
     )
@@ -164,3 +175,64 @@ def narrate(analysis, child_name=None):
     if not text or not _verify(text):
         return fallback, "template"
     return text, "llm"
+
+
+def select_next_words(analysis, word_bank):
+    """Ask Groq which word-bank indices the next level should weight toward,
+    validated against the real bank. Any failure, timeout, or invalid index
+    falls back to the deterministic worst-position rule below - Groq can
+    never hand back a word that isn't in the bank, and never touches an
+    in-progress session, only the *next* one."""
+    fallback = _fallback_selection(analysis, word_bank)
+
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return fallback, "rule"
+
+    valid_indices = {w["index"] for w in word_bank}
+    prompt = (
+        "A child is practicing the /s/ sound. Here is their practice data: "
+        "%s\n\nHere is the full list of available practice words, each with "
+        "an index and the word position of its /s/ sound: %s\n\n"
+        "Reply with ONLY a JSON array of 4-6 word indices (integers from the "
+        "list above) that would give the most useful next practice session, "
+        "weighted toward whichever position has been hardest. Reply with "
+        "ONLY the JSON array, nothing else - no explanation, no markdown."
+        % (analysis, word_bank)
+    )
+
+    try:
+        resp = requests.post(
+            GROQ_URL,
+            headers={"Authorization": "Bearer %s" % api_key},
+            json={
+                "model": GROQ_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.2,
+                "max_tokens": 100,
+            },
+            timeout=GROQ_TIMEOUT_S,
+        )
+        resp.raise_for_status()
+        raw = resp.json()["choices"][0]["message"]["content"].strip()
+        indices = json.loads(raw)
+    except Exception:                                  # noqa: BLE001
+        return fallback, "rule"
+
+    if not isinstance(indices, list) or not indices:
+        return fallback, "rule"
+    clean = [i for i in indices if isinstance(i, int) and i in valid_indices]
+    if not clean:
+        return fallback, "rule"
+    return clean[:6], "llm"
+
+
+def _fallback_selection(analysis, word_bank):
+    """Deterministic: weight toward the worst-scoring position, same signal
+    core/policy.js's feedbackForSession already surfaces on the frontend."""
+    position_pct = analysis.get("position_pct") or {}
+    if not position_pct:
+        return [w["index"] for w in word_bank[:4]]
+    worst = min(position_pct, key=lambda p: position_pct[p] if position_pct[p] is not None else 100)
+    matches = [w["index"] for w in word_bank if w.get("position") == worst]
+    return (matches or [w["index"] for w in word_bank])[:6]
