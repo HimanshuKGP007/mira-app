@@ -114,7 +114,8 @@ export class Recorder {
     for (const c of this._chunks) { raw.set(c, o); o += c.length; }
     this._chunks = [];
 
-    const pcm = resampleTo(raw, this.sampleRate, TARGET_SR);
+    const pcmFull = resampleTo(raw, this.sampleRate, TARGET_SR);
+    const pcm = trimSilence(pcmFull, TARGET_SR);
     const blob = encodeWav(pcm, TARGET_SR);
     return {
       blob,
@@ -140,6 +141,49 @@ export class Recorder {
     try { this.ctx?.close(); } catch {}
     this.stream = this.ctx = this.source = this.node = this.analyser = null;
   }
+}
+
+/* --- trim leading/trailing silence ----------------------------------------
+   The recorder always captures a fixed REC_MS window (kid.js), so a quick
+   word leaves seconds of trailing room tone in the buffer. Forced alignment
+   still has to assign every one of those frames somewhere, and it lands them
+   on the last target phone's span — a real "biscuits" take measured a final
+   /s/ window of 2160ms where the actual sound was under 100ms. post_max then
+   maximises over a window that's almost entirely silence, which is the wrong
+   basis for a confidence score. Trimming to the detected speech region (with
+   generous padding) keeps every phone's window close to what was actually
+   said. */
+export function trimSilence(pcm, sampleRate) {
+  const frame = Math.floor(sampleRate * 0.02);
+  const frameCount = Math.floor(pcm.length / frame);
+  if (frameCount < 10) return pcm;                 // too short to bother
+
+  const rms = new Float32Array(frameCount);
+  for (let i = 0; i < frameCount; i++) {
+    let s = 0;
+    const base = i * frame;
+    for (let j = base; j < base + frame; j++) s += pcm[j] * pcm[j];
+    rms[i] = Math.sqrt(s / frame);
+  }
+  const sorted = Float32Array.from(rms).sort();
+  const noiseFloor = sorted[Math.floor(sorted.length * 0.1)] || 1e-6;
+  const peak = sorted[sorted.length - 1] || 1e-6;
+  // Conservative on purpose: a real quiet consonant must never be trimmed as
+  // "silence", so the bar is well above the measured noise floor.
+  const speechThreshold = Math.max(noiseFloor * 3, peak * 0.08);
+
+  let first = -1, last = -1;
+  for (let i = 0; i < frameCount; i++) {
+    if (rms[i] >= speechThreshold) { if (first === -1) first = i; last = i; }
+  }
+  if (first === -1) return pcm;   // nothing read as speech; leave it for the SNR gate to reject
+
+  const padFrames = Math.round(0.15 / 0.02);        // 150ms of context on each side
+  const startFrame = Math.max(0, first - padFrames);
+  const endFrame = Math.min(frameCount - 1, last + padFrames);
+  const startSample = startFrame * frame;
+  const endSample = Math.min(pcm.length, (endFrame + 1) * frame);
+  return pcm.slice(startSample, endSample);
 }
 
 /* --- linear resample to 16 kHz ------------------------------------------- */
