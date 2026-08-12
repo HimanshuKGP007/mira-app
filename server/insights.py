@@ -43,6 +43,7 @@ def compute_analysis(sessions, target_phone):
     n_sessions = len(sessions)
     totals = {"scored": 0, "clear": 0, "flagged": 0, "not_scored": 0}
     by_position = {}
+    substitute_counts = {}
 
     for s in sessions:
         totals["scored"] += s.get("scored", 0)
@@ -53,6 +54,16 @@ def compute_analysis(sessions, target_phone):
             bp = by_position.setdefault(pos, {"scored": 0, "clear": 0})
             bp["scored"] += v.get("scored", 0)
             bp["clear"] += v.get("clear", 0)
+        for item in s.get("items", []):
+            for inst in item.get("instances", []):
+                sub = inst.get("substitute")
+                if sub:
+                    substitute_counts[sub] = substitute_counts.get(sub, 0) + 1
+
+    top_substitute = None
+    if substitute_counts:
+        sub, count = max(substitute_counts.items(), key=lambda kv: kv[1])
+        top_substitute = {"sound": sub, "count": count}
 
     accuracy_pct = (round(100 * totals["clear"] / totals["scored"])
                     if totals["scored"] else None)
@@ -82,6 +93,7 @@ def compute_analysis(sessions, target_phone):
         "accuracy_pct": accuracy_pct,
         "position_pct": position_pct,
         "trend": trend,
+        "top_substitute": top_substitute,
     }
 
 
@@ -190,15 +202,28 @@ def select_next_words(analysis, word_bank):
         return fallback, "rule"
 
     valid_indices = {w["index"] for w in word_bank}
+    top_sub = analysis.get("top_substitute")
+    sub_hint = (
+        "The child's most frequent substitution is using /%s/ in place of "
+        "/s/ (seen %d time%s). Weight your choice toward words where that "
+        "specific confusion would be most exposed - e.g. avoid words already "
+        "dominated by other hard-to-distinguish sounds, and prefer words "
+        "whose surrounding sounds won't mask a /%s/-for-/s/ swap.\n\n"
+        % (top_sub["sound"], top_sub["count"], "" if top_sub["count"] == 1 else "s", top_sub["sound"])
+        if top_sub else ""
+    )
     prompt = (
         "A child is practicing the /s/ sound. Here is their practice data: "
-        "%s\n\nHere is the full list of available practice words, each with "
-        "an index and the word position of its /s/ sound: %s\n\n"
+        "%s\n\n%s"
+        "Here is the full list of available practice words, each with "
+        "an index, the word position of its /s/ sound, and its phone "
+        "sequence: %s\n\n"
         "Reply with ONLY a JSON array of 4-6 word indices (integers from the "
         "list above) that would give the most useful next practice session, "
-        "weighted toward whichever position has been hardest. Reply with "
-        "ONLY the JSON array, nothing else - no explanation, no markdown."
-        % (analysis, word_bank)
+        "weighted toward whichever position has been hardest and, if given, "
+        "toward exposing the child's specific substitution pattern above. "
+        "Reply with ONLY the JSON array, nothing else - no explanation, no markdown."
+        % (analysis, sub_hint, word_bank)
     )
 
     try:

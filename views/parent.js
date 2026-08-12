@@ -86,7 +86,7 @@ async function loadInsights(targetPhone) {
         child_name: store.name || null,
         target_phone: targetPhone,
         sessions: store.sessions,
-        word_bank: WORDS.map((w, i) => ({ index: i, text: w.text, position: w.position })),
+        word_bank: WORDS.map((w, i) => ({ index: i, text: w.text, position: w.position, phones: w.phones })),
       }),
     });
     if (!res.ok) throw new Error('bad status');

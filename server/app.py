@@ -127,7 +127,7 @@ async def get_insights(payload: dict = Body(...)):
     plus a guarded pick of which words the next level should weight toward.
 
     Body: {"child_name": str|None, "target_phone": str, "sessions": [...],
-    "word_bank": [{"index": int, "text": str, "position": str}, ...]}
+    "word_bank": [{"index": int, "text": str, "position": str, "phones": [...]}, ...]}
     where `sessions` is store.sessions from core/rewards.js, oldest first,
     and `word_bank` mirrors core/exercise.js's WORDS. Never scores anything
     itself; ordinary arithmetic plus an optional, verified LLM sentence and
