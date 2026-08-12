@@ -1,5 +1,9 @@
 # Mira scorer
 
+> **Read [`../CAUTION.md`](../CAUTION.md) before changing anything in this
+> directory.** The scoring pipeline is fragile in ways that don't show up
+> just from reading the code.
+
 A live pronunciation scorer for the Mira app, built from the Module 1 notebooks.
 It serves the frontend too, so one process runs everything.
 

@@ -5,6 +5,9 @@
 <h1 align="center">Mira</h1>
 <p align="center"><b>Per-sound pronunciation measurement for children's speech practice — built to measure, not diagnose.</b></p>
 
+> **Before changing anything near the scoring pipeline, read [`CAUTION.md`](CAUTION.md) first.**
+> It's fragile in ways that aren't obvious from reading the code alone.
+
 ---
 
 ## What it is
