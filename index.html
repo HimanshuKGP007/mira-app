@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Mira — Speech Practice</title>
+<title>Mira · Speech Practice</title>
 <meta name="theme-color" content="#ECEFF6">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -108,6 +108,8 @@
         <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
       </div>
       <div id="badgePops"></div>
+      <div id="doneFact" class="note" style="margin-top:8px;text-align:center;font-family:var(--font-kid);
+        font-size:13px;color:var(--ink-soft)"></div>
       <div style="display:flex;flex-direction:column;gap:9px;align-items:center;margin-top:4px">
         <button class="btn btn-leaf" id="doneNext">Next trail</button>
         <button class="quiet" id="doneMap">Back to map</button>
@@ -138,7 +140,7 @@
         </div>
 
         <div id="tab-parent">
-          <div class="p-head"><h2 id="pName">—</h2><div class="meta" id="pMeta"></div></div>
+          <div class="p-head"><h2 id="pName"></h2><div class="meta" id="pMeta"></div></div>
           <div id="parentBody" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
         </div>
 
@@ -195,13 +197,13 @@
           <button class="btn-ghost" id="exportBtn" style="width:100%;margin-bottom:8px">Export sessions &amp; corrections</button>
           <button class="btn-ghost" id="resetBtn" style="width:100%">Reset all local data</button>
           <div class="note" style="margin-top:9px">Everything is stored on this device only.
-          Clinician overrides keep both values — Mira's marking is never overwritten.</div>
+          Clinician overrides keep both values; Mira's marking is never overwritten.</div>
         </div>
       </div>
     </section>
 
   </div>
-  <div class="caption">Mira — prototype. Scoring comes from a research model with known limits; not a clinical device.</div>
+  <div class="caption">Mira · prototype. Scoring comes from a research model with known limits, not a clinical device.</div>
 </div>
 
 <script type="module">
@@ -283,7 +285,7 @@ async function refreshHealth() {
       ? `<b>${r.health.tier}</b> on ${r.health.device}<br>${r.health.description}
          <br><br>Measured AUC <b>${r.health.expected_auc}</b> · PCC ${r.health.expected_pcc}
          (the trained ensemble reaches 0.843 / 0.376 but needs artifacts that are not installed).
-         <br>Confidence is a <b>${r.health.confidence_kind.replace('_', ' ')}</b> — uncalibrated;
+         <br>Confidence is a <b>${r.health.confidence_kind.replace('_', ' ')}</b>, uncalibrated;
          flag threshold ${r.health.flag_threshold}.
          <br>Declines: ${r.health.withheld_phonemes.map(p => `/${p}/`).join(' ')}`
       : r.message;

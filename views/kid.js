@@ -432,6 +432,15 @@ const PRAISE = ['Clear! Lovely snake sound!', 'Perfect!', 'That was a great one!
                 'Beautiful sssound!', 'Lovely!'];
 const praise = () => PRAISE[Math.floor(Math.random() * PRAISE.length)];
 
+const FUN_FACTS = [
+  "Lots of kids practice their sounds every single day, just like you!",
+  "Snakes don't have ears, but they can feel sound through the ground!",
+  "Your mouth makes hundreds of different sounds without you even thinking about it.",
+  "The more you practice a sound, the easier it gets, like riding a bike!",
+  "Some words have the same sound hiding in them more than once, like 'sausage'!",
+];
+const funFact = () => FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)];
+
 function paint(kind) {
   $('#picCard').className = `pic-card ring-${kind}`;
   const seg = $('#vine').children[session.index];
@@ -518,6 +527,9 @@ function finish() {
   $('#badgePops').innerHTML = out.badges.map((b, i) =>
     `<div class="badge-pop" style="animation-delay:${0.6 + i * 0.3}s">${icon(b.icon, 31)}
       <div><div class="t">New trophy!</div><div class="n">${b.name}</div></div></div>`).join('');
+
+  const factEl = $('#doneFact');
+  if (factEl) factEl.textContent = funFact();
 
   $('#doneNext').style.display = currentIndex() < LEVELS.length ? 'inline-block' : 'none';
 
