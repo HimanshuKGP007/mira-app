@@ -173,6 +173,13 @@ export const ICONS = {
   gear: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="none" stroke="#3C4666" stroke-width="2"/>
     <path d="M12 3 v2.5 M12 18.5 V21 M21 12 h-2.5 M5.5 12 H3 M18.4 5.6 l-1.8 1.8 M7.4 16.6 l-1.8 1.8
     M18.4 18.4 l-1.8 -1.8 M7.4 7.4 L5.6 5.6" stroke="#3C4666" stroke-width="2" stroke-linecap="round"/></svg>`,
+  settings: `<svg viewBox="0 0 24 24">
+    <line x1="4" y1="6.5" x2="20" y2="6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="15" cy="6.5" r="2.2" fill="currentColor"/>
+    <line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="9" cy="12" r="2.2" fill="currentColor"/>
+    <line x1="4" y1="17.5" x2="20" y2="17.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="17" cy="17.5" r="2.2" fill="currentColor"/></svg>`,
   lock: `<svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2.5" fill="#8A93AD"/>
     <path d="M8 10 V7.5 a4 4 0 0 1 8 0 V10" fill="none" stroke="#8A93AD" stroke-width="2.2"/></svg>`,
   check: `<svg viewBox="0 0 24 24"><path d="M5 12.5 L10 17.5 L19 7" fill="none" stroke="#43C06B"
