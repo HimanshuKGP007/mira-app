@@ -96,6 +96,33 @@ export const BADGES = [
     when: s => s.stars >= 100 },
 ];
 
+/** Collectible friends, unlocked by cumulative stars — the same currency
+ * everything else already runs on, so this doesn't introduce a second
+ * economy. Thresholds are spread so a clean session (~20-30 stars) makes
+ * steady, visible progress toward the next one. */
+export const FRIENDS = [
+  { id: 'mira', name: 'Mira', icon: 'friendMira', stars: 0 },
+  { id: 'rabbit', name: 'Hoppy', icon: 'friendRabbit', stars: 25 },
+  { id: 'fox', name: 'Ember', icon: 'friendFox', stars: 50 },
+  { id: 'panda', name: 'Bamboo', icon: 'friendPanda', stars: 80 },
+  { id: 'bear', name: 'Honey', icon: 'friendBear', stars: 120 },
+  { id: 'lion', name: 'Leo', icon: 'friendLion', stars: 160 },
+  { id: 'owl', name: 'Hoot', icon: 'friendOwl', stars: 210 },
+  { id: 'penguin', name: 'Waddles', icon: 'friendPenguin', stars: 270 },
+  { id: 'frog', name: 'Ribbit', icon: 'friendFrog', stars: 340 },
+  { id: 'turtle', name: 'Shelly', icon: 'friendTurtle', stars: 420 },
+  { id: 'deer', name: 'Willow', icon: 'friendDeer', stars: 520 },
+  { id: 'dolphin', name: 'Splash', icon: 'friendDolphin', stars: 650 },
+];
+
+export const unlockedFriends = () => FRIENDS.filter(f => store.stars >= f.stars);
+
+/** Friends whose threshold sits strictly between a before/after star count —
+ * used right after a session commits its stars, to know what to celebrate. */
+export function friendsUnlockedBetween(starsBefore, starsAfter) {
+  return FRIENDS.filter(f => f.stars > starsBefore && f.stars <= starsAfter);
+}
+
 export function checkBadges() {
   const have = store.badges;
   const snapshot = { levels: store.levels, sessions: store.sessions, stars: store.stars };

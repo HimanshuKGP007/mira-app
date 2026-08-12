@@ -54,8 +54,25 @@
     <section class="screen kid" id="s-map" style="padding:0">
       <div class="map-hud" id="mapHud"></div>
       <div class="map-world" id="mapWorld"></div>
-      <div class="map-foot"><button class="quiet" id="mapAdults">For grown-ups →</button></div>
+      <div class="map-foot">
+        <button class="quiet" id="mapFriends">My Friends</button>
+        <button class="quiet" id="mapAdults">For grown-ups →</button>
+      </div>
       <div class="mira" id="mira-map" style="display:none"></div>
+    </section>
+
+    <!-- ================= FRIENDS ================= -->
+    <section class="screen kid" id="s-friends">
+      <div class="ex-top">
+        <button class="icon-flat" id="friendsBack" title="Back">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 5 L8 12 L15 19" fill="none"
+            stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div style="font-family:var(--font-kid);font-weight:600;font-size:19px">My Friends</div>
+      </div>
+      <div class="note" id="friendsCount" style="text-align:center;margin:6px 0 4px"></div>
+      <div id="friendsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+        padding:6px 4px 20px;overflow-y:auto"></div>
     </section>
 
     <!-- ================= EXERCISE ================= -->
@@ -309,6 +326,8 @@ $('#titlePlay').addEventListener('click', () => {
 });
 $('#titleAdults').addEventListener('click', () => toPin());
 $('#mapAdults').addEventListener('click', () => toPin());
+$('#mapFriends').addEventListener('click', () => { Kid.renderFriends(); go('#s-friends'); });
+$('#friendsBack').addEventListener('click', () => { Kid.renderMap(); go('#s-map'); });
 $('#nameGo').addEventListener('click', () => {
   store.name = ($('#nameInput').value || '').trim() || 'Priya';
   Kid.renderMap();

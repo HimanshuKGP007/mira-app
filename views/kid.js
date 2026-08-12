@@ -175,9 +175,30 @@ export function renderMap() {
   });
 }
 
+/* ---------------- friends ---------------- */
+export function renderFriends() {
+  const have = rewards.unlockedFriends().map(f => f.id);
+  $('#friendsCount').textContent = `${have.length} of ${rewards.FRIENDS.length} collected`;
+  $('#friendsGrid').innerHTML = rewards.FRIENDS.map(f => {
+    const unlocked = have.includes(f.id);
+    return `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+      <div style="width:64px;height:64px;border-radius:50%;background:var(--nm);
+        box-shadow:${unlocked ? 'var(--raise)' : 'var(--press-sm)'};display:grid;place-items:center;
+        opacity:${unlocked ? '1' : '.35'};filter:${unlocked ? 'none' : 'grayscale(1)'}">
+        ${unlocked ? icon(f.icon, 46) : icon('lock', 24)}
+      </div>
+      <div style="font-family:var(--font-kid);font-size:12px;font-weight:600;
+        color:${unlocked ? 'var(--ink)' : 'var(--ink-faint)'}">${unlocked ? f.name : '?'}</div>
+      ${!unlocked ? `<div style="font-size:10px;color:var(--ink-faint)">${f.stars} stars</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
 /* ---------------- exercise ---------------- */
 export async function startLevel(level) {
   session = newSession(level);
+  session.startStars = store.stars;
   busy = false;
   if (!recorder) recorder = new Recorder();
   buildVine();
@@ -524,9 +545,15 @@ function finish() {
   fill.style.width = '0';
   setTimeout(() => { fill.style.width = `${(rewards.xpInLevel() / rewards.XP_PER_LEVEL) * 100}%`; }, 300);
 
-  $('#badgePops').innerHTML = out.badges.map((b, i) =>
-    `<div class="badge-pop" style="animation-delay:${0.6 + i * 0.3}s">${icon(b.icon, 31)}
-      <div><div class="t">New trophy!</div><div class="n">${b.name}</div></div></div>`).join('');
+  const newFriends = rewards.friendsUnlockedBetween(session.startStars ?? store.stars, store.stars);
+  $('#badgePops').innerHTML = [
+    ...out.badges.map((b, i) =>
+      `<div class="badge-pop" style="animation-delay:${0.6 + i * 0.3}s">${icon(b.icon, 31)}
+        <div><div class="t">New trophy!</div><div class="n">${b.name}</div></div></div>`),
+    ...newFriends.map((f, i) =>
+      `<div class="badge-pop" style="animation-delay:${0.6 + (out.badges.length + i) * 0.3}s">${icon(f.icon, 31)}
+        <div><div class="t">New friend!</div><div class="n">${f.name}</div></div></div>`),
+  ].join('');
 
   const factEl = $('#doneFact');
   if (factEl) factEl.textContent = funFact();

@@ -123,6 +123,65 @@ export const ICONS = {
     <circle cx="38" cy="32" r="3.4" fill="#FFC93C"/><circle cx="62" cy="32" r="3.4" fill="#FFC93C"/>
     <path d="M40 46 Q50 54 60 46" stroke="#FFC93C" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
 
+  /* --- friends: unlockable collectible animals --- */
+  friendMira: `<svg viewBox="0 0 100 100"><ellipse cx="28" cy="46" rx="16" ry="20" fill="#9AA4FA"/><ellipse cx="72" cy="46" rx="16" ry="20" fill="#9AA4FA"/>
+    <circle cx="50" cy="50" r="30" fill="#A9B2FF"/>
+    <circle cx="40" cy="46" r="4" fill="#3B3566"/><circle cx="60" cy="46" r="4" fill="#3B3566"/>
+    <path d="M46 58 Q50 68 54 58 Q56 72 50 76 Q44 72 46 58 Z" fill="#8E97F0"/></svg>`,
+  friendRabbit: `<svg viewBox="0 0 100 100"><ellipse cx="38" cy="20" rx="8" ry="24" fill="#FFD5E5"/><ellipse cx="62" cy="20" rx="8" ry="24" fill="#FFD5E5"/>
+    <ellipse cx="38" cy="20" rx="4" ry="18" fill="#FF9EC0"/><ellipse cx="62" cy="20" rx="4" ry="18" fill="#FF9EC0"/>
+    <circle cx="50" cy="58" r="28" fill="#FFF0F5"/>
+    <circle cx="41" cy="55" r="3.5" fill="#3C4666"/><circle cx="59" cy="55" r="3.5" fill="#3C4666"/>
+    <ellipse cx="50" cy="65" rx="4" ry="3" fill="#FF9EC0"/></svg>`,
+  friendFox: `<svg viewBox="0 0 100 100"><path d="M28 26 L40 42 L22 44 Z" fill="#F5A93B"/><path d="M72 26 L60 42 L78 44 Z" fill="#F5A93B"/>
+    <circle cx="50" cy="54" r="28" fill="#F5A93B"/>
+    <path d="M36 62 a14 12 0 0 0 28 0 Z" fill="#FFF3E2"/>
+    <circle cx="41" cy="50" r="3.5" fill="#3C4666"/><circle cx="59" cy="50" r="3.5" fill="#3C4666"/>
+    <path d="M46 64 L54 64 L50 70 Z" fill="#3C4666"/></svg>`,
+  friendPanda: `<svg viewBox="0 0 100 100"><circle cx="26" cy="26" r="12" fill="#3C4666"/><circle cx="74" cy="26" r="12" fill="#3C4666"/>
+    <circle cx="50" cy="54" r="30" fill="#fff" stroke="#E4E7F0" stroke-width="2"/>
+    <ellipse cx="39" cy="50" rx="8" ry="10" fill="#3C4666"/><ellipse cx="61" cy="50" rx="8" ry="10" fill="#3C4666"/>
+    <circle cx="39" cy="51" r="3" fill="#fff"/><circle cx="61" cy="51" r="3" fill="#fff"/>
+    <ellipse cx="50" cy="64" rx="4" ry="3" fill="#3C4666"/></svg>`,
+  friendBear: `<svg viewBox="0 0 100 100"><circle cx="28" cy="26" r="12" fill="#B08968"/><circle cx="72" cy="26" r="12" fill="#B08968"/>
+    <circle cx="50" cy="54" r="30" fill="#C9A27A"/>
+    <ellipse cx="50" cy="60" rx="12" ry="9" fill="#EAD9C0"/>
+    <circle cx="40" cy="50" r="3.5" fill="#3C4666"/><circle cx="60" cy="50" r="3.5" fill="#3C4666"/>
+    <ellipse cx="50" cy="58" rx="3.5" ry="2.6" fill="#3C4666"/></svg>`,
+  friendLion: `<svg viewBox="0 0 100 100"><circle cx="50" cy="54" r="38" fill="#E0A81E"/>
+    <circle cx="50" cy="54" r="26" fill="#FFC93C"/>
+    <circle cx="40" cy="50" r="3.4" fill="#3C4666"/><circle cx="60" cy="50" r="3.4" fill="#3C4666"/>
+    <ellipse cx="50" cy="60" rx="10" ry="7" fill="#FFE8A8"/>
+    <ellipse cx="50" cy="62" rx="3" ry="2.2" fill="#3C4666"/></svg>`,
+  friendOwl: `<svg viewBox="0 0 100 100"><path d="M22 30 Q30 14 40 28 Z" fill="#B08968"/><path d="M78 30 Q70 14 60 28 Z" fill="#B08968"/>
+    <circle cx="50" cy="54" r="30" fill="#C9A27A"/>
+    <circle cx="38" cy="50" r="12" fill="#fff"/><circle cx="62" cy="50" r="12" fill="#fff"/>
+    <circle cx="38" cy="50" r="5" fill="#3C4666"/><circle cx="62" cy="50" r="5" fill="#3C4666"/>
+    <path d="M46 62 L54 62 L50 70 Z" fill="#F5A93B"/></svg>`,
+  friendPenguin: `<svg viewBox="0 0 100 100"><path d="M50 16 C28 16 20 40 22 62 C24 80 38 88 50 88 C62 88 76 80 78 62 C80 40 72 16 50 16 Z" fill="#3C4666"/>
+    <path d="M50 30 C36 30 30 46 32 62 C34 76 42 82 50 82 C58 82 66 76 68 62 C70 46 64 30 50 30 Z" fill="#fff"/>
+    <circle cx="42" cy="42" r="3" fill="#3C4666"/><circle cx="58" cy="42" r="3" fill="#3C4666"/>
+    <path d="M46 48 L54 48 L50 54 Z" fill="#F5A93B"/></svg>`,
+  friendFrog: `<svg viewBox="0 0 100 100"><circle cx="34" cy="34" r="12" fill="#5BAF4E"/><circle cx="66" cy="34" r="12" fill="#5BAF4E"/>
+    <circle cx="34" cy="34" r="5" fill="#3C4666"/><circle cx="66" cy="34" r="5" fill="#3C4666"/>
+    <ellipse cx="50" cy="58" rx="32" ry="26" fill="#6FC85F"/>
+    <path d="M32 66 Q50 76 68 66" stroke="#3C4666" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+  friendTurtle: `<svg viewBox="0 0 100 100"><circle cx="50" cy="52" r="26" fill="#5BAF4E"/>
+    <path d="M50 30 L58 40 L50 50 L42 40 Z" fill="#3E8C42"/><path d="M32 52 L42 44 L42 60 L32 62 Z" fill="#3E8C42"/>
+    <path d="M68 52 L58 44 L58 60 L68 62 Z" fill="#3E8C42"/><path d="M50 74 L42 64 L58 64 Z" fill="#3E8C42"/>
+    <ellipse cx="50" cy="82" rx="12" ry="8" fill="#7FCB6E"/>
+    <circle cx="45" cy="80" r="2.4" fill="#3C4666"/><circle cx="55" cy="80" r="2.4" fill="#3C4666"/></svg>`,
+  friendDeer: `<svg viewBox="0 0 100 100"><path d="M32 30 Q24 14 16 18 M32 30 Q30 12 38 10" stroke="#B08968" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <path d="M68 30 Q76 14 84 18 M68 30 Q70 12 62 10" stroke="#B08968" stroke-width="4" fill="none" stroke-linecap="round"/>
+    <circle cx="50" cy="56" r="28" fill="#D5B48C"/>
+    <circle cx="40" cy="52" r="3.4" fill="#3C4666"/><circle cx="60" cy="52" r="3.4" fill="#3C4666"/>
+    <ellipse cx="50" cy="64" rx="5" ry="4" fill="#fff"/><ellipse cx="50" cy="64" rx="2.6" ry="2" fill="#3C4666"/></svg>`,
+  friendDolphin: `<svg viewBox="0 0 100 100"><path d="M50 20 C30 20 18 38 18 56 C18 72 32 84 50 84 C68 84 82 72 82 56 C82 38 70 20 50 20 Z" fill="#6FC3E8"/>
+    <path d="M50 20 L58 6 L54 24 Z" fill="#4FA9D6"/>
+    <path d="M18 56 C10 54 6 60 6 66 C10 64 16 62 20 60 Z" fill="#4FA9D6"/>
+    <circle cx="60" cy="42" r="3" fill="#3C4666"/>
+    <path d="M40 58 Q50 64 62 56" stroke="#3C4666" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>`,
+
   /* --- theme --- */
   snake: `<svg viewBox="0 0 100 100">
     <path d="M22 74 c0 -14 18 -12 18 -24 c0 -12 -16 -10 -16 -22 c0 -10 12 -14 22 -10"

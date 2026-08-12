@@ -196,7 +196,7 @@ input:focus-visible{box-shadow:var(--press-sm),0 0 0 3px rgba(122,108,240,.35)}
 .firefly{position:absolute;width:6px;height:6px;border-radius:50%;background:#FFE9A8;
   box-shadow:0 0 8px 3px rgba(255,220,120,.65);animation:fly 6s ease-in-out infinite}
 @keyframes fly{0%,100%{transform:translate(0,0);opacity:.3}50%{transform:translate(14px,-20px);opacity:1}}
-.map-foot{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;z-index:5}
+.map-foot{position:absolute;bottom:10px;left:0;right:0;display:flex;justify-content:center;gap:18px;z-index:5}
 
 /* exercise */
 #s-ex{gap:8px}
