@@ -89,6 +89,7 @@ export function newSession(level) {
       verdict: null,     // 'correct' | 'substituted' | 'omitted' | 'assimilated' | 'not_scored'
       result: null,      // the normalised contract object
       attempts: 0,
+      confidenceHistory: [],   // lowest target-instance confidence per attempt, oldest first
       demo: false,
     })),
   };

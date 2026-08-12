@@ -361,6 +361,10 @@ function handleOutcome(res) {
        : 'not_scored')
     : 'not_scored';
 
+  const attemptConfidences = targets.map(t => t.confidence).filter(c => c != null);
+  const worstThisAttempt = attemptConfidences.length ? Math.min(...attemptConfidences) : null;
+  it.confidenceHistory.push(worstThisAttempt);
+
   if (verdict === 'correct') {
     it.verdict = 'correct';
     paint('correct');
@@ -383,8 +387,14 @@ function handleOutcome(res) {
     return;
   }
 
-  // flagged — one retry, then move on. Never negative, never a star.
-  if (it.attempts < 2) {
+  // Flagged: retry only while attempts remain AND (this is the very first
+  // retry, or the child is measurably improving). Hard cap at 3 attempts,
+  // no exceptions — Mira is never allowed to get stuck on one word.
+  const [prevConf, curConf] = it.confidenceHistory.slice(-2);
+  const improving = prevConf != null && curConf != null && curConf > prevConf;
+  const offerRetry = it.attempts < 3 && (it.attempts === 1 || improving);
+
+  if (offerRetry) {
     paint('flagged');
     ctx.sfx('soft');
     miraState(null);
