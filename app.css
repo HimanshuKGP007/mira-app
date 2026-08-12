@@ -163,7 +163,10 @@ input:focus-visible{box-shadow:var(--press-sm),0 0 0 3px rgba(122,108,240,.35)}
   flex-wrap:wrap}
 .map-hud .t{width:100%;margin-bottom:6px}
 .map-hud .t{font-family:var(--font-kid);font-weight:600;font-size:19px;padding-right:104px}
-.map-world{position:relative;flex:1;overflow:hidden}
+/* min-height stops flexbox from squeezing the trail (and its % node
+   positions) shorter than the design intends on tight viewports; the actual
+   scrolling happens on the parent .screen, which now has overflow-y:auto. */
+.map-world{position:relative;flex:1;min-height:460px}
 .map-bg{position:absolute;inset:0;width:100%;height:100%}
 .node{position:absolute;transform:translate(-50%,-50%);width:64px;height:64px;border:none;
   cursor:pointer;border-radius:50%;background:var(--nm);box-shadow:var(--raise);
