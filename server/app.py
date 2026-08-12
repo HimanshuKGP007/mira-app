@@ -16,6 +16,7 @@ from fastapi import Body, FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 
 import insights
 import policy
@@ -50,6 +51,23 @@ app.add_middleware(
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+class NoCacheAppSourceMiddleware(BaseHTTPMiddleware):
+    """StaticFiles sets Last-Modified/ETag but no Cache-Control, so browsers
+    apply heuristic caching and can silently serve a stale module even after
+    a hard reload — an edited .js file wasn't showing up at all without
+    manually clearing site data. Every app source file must always
+    revalidate: still a fast 304 when unchanged, never silently stale."""
+    async def dispatch(self, request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if path.startswith(("/core/", "/views/")) or path in ("/", "/index.html", "/app.css"):
+            response.headers["Cache-Control"] = "no-cache"
+        return response
+
+
+app.add_middleware(NoCacheAppSourceMiddleware)
 
 
 @app.get("/health")
