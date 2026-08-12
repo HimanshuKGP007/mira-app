@@ -227,6 +227,11 @@ export function normalizeResponse(raw, { promptWord, targetPhone } = {}) {
       reasonSource: source,
       reliability: reliabilityOf(target),
       isTarget: targetPhone != null && normalizeIpa(target) === normalizeIpa(targetPhone),
+      // clinician-only technical detail, never surfaced to the child/parent:
+      // the window the confidence was actually measured over, and the full
+      // set of GOP variants behind that single confidence number.
+      durationMs: p.duration_ms ?? null,
+      gop: p.gop ?? null,
       // retained for the clinician view only; NEVER rendered as a number
       _rawScore: p.score ?? null,
     };
@@ -273,7 +278,8 @@ export function summarize(phones) {
 /* --- templated feedback [B2C §12 register] --------------------------------
    Templated, never generated. Reported BY PATTERN, not sound by sound:
    "one odd /r/ is noise, five odd /r/s is a habit".                       */
-export function feedbackForSession(items, targetPhone) {
+export function feedbackForSession(items, targetPhone, childName) {
+  const name = childName || 'Your child';
   const done = items.filter(i => i.result);
   const scored = done.filter(i => i.verdict !== 'not_scored');
   const clear = scored.filter(i => i.verdict === 'correct');
@@ -298,10 +304,10 @@ export function feedbackForSession(items, targetPhone) {
 
   let headline, detail;
   if (!flagged.length) {
-    headline = `Your /${targetPhone}/ was clear in all ${scored.length} scored words.`;
+    headline = `${name}'s /${targetPhone}/ was clear in all ${scored.length} scored words.`;
     detail = `Nothing was flagged this session.`;
   } else {
-    headline = `Your /${targetPhone}/ was flagged in ${flagged.length} of ${scored.length} scored words.`;
+    headline = `${name}'s /${targetPhone}/ was flagged in ${flagged.length} of ${scored.length} scored words.`;
     detail = worstPos && worstPos[1].length > 1
       ? `Most often at the ${worstPos[0]} of the word: ${worstPos[1].join(', ')}.`
       : `Flagged in: ${flagged.map(i => i.word.text).join(', ')}.`;
@@ -333,10 +339,3 @@ export function isAgeExpected(phone, ageYears) {
   if (age == null || ageYears == null) return null;   // unknown stays unknown
   return ageYears >= age;
 }
-
-export const HONEST_PITCH =
-  'It catches about half the sounds you would have marked wrong, it raises a ' +
-  'false alarm on about one correct sound in six, it tells you how confident it ' +
-  'is on every one, and it says not scored rather than guessing on the sounds ' +
-  'it is bad at. It does not diagnose, it does not set goals, and it does not ' +
-  'talk to your patient.';

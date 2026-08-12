@@ -136,10 +136,13 @@ export function commitSession({ levelId, levelName, targetPhone, items, starsAlr
   // Which scorer produced these markings — carried so the adult views can
   // state the tier and its measured limits rather than implying authority.
   const scorer = done.map(i => i.result?.scorer).find(Boolean) || null;
+  // The real per-utterance provenance (model/aligner/protocol/threshold
+  // version), for the clinician tab. Never fabricate this if it's missing.
+  const provenance = done.map(i => i.result?.provenance).find(Boolean) || null;
 
   const record = {
     at: new Date().toISOString(),
-    levelId, levelName, targetPhone, scorer,
+    levelId, levelName, targetPhone, scorer, provenance,
     total: done.length,
     scored: scored.length,
     notScored: notScored.length,
@@ -151,11 +154,13 @@ export function commitSession({ levelId, levelName, targetPhone, items, starsAlr
       return {
         word: i.word.text, position: i.word.position, verdict: i.verdict,
         struggling: i.attempts >= 3 && i.verdict !== 'correct',
+        alignmentQuality: i.result?.quality?.alignmentQuality ?? null,
         // one row per /s/ instance actually measured in this word
         instances: targets.map(t => ({
           position: t.position, marking: t.marking,
           confidence: t.confidence, confidenceKind: t.confidenceKind,
           substitute: t.substitute ?? null, reason: t.reason ?? null,
+          durationMs: t.durationMs ?? null, gop: t.gop ?? null,
         })),
       };
     }),
