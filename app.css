@@ -79,6 +79,9 @@ body{
   box-shadow:var(--raise-sm);cursor:pointer;font-size:17px;color:var(--ink);flex:0 0 auto;
   display:grid;place-items:center}
 .icon-btn:active{box-shadow:var(--press-sm)}
+.icon-flat{width:38px;height:38px;border:none;background:none;cursor:pointer;color:var(--ink);
+  display:grid;place-items:center;flex:0 0 auto;opacity:.85}
+.icon-flat:active{opacity:1;transform:scale(.92)}
 .topbar{position:absolute;top:18px;right:18px;z-index:40;display:flex;gap:8px}
 /* header row on adult screens must clear the floating top bar */
 .screen-head{display:flex;align-items:center;gap:8px;padding-right:104px;min-height:44px}

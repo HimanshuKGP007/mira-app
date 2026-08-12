@@ -21,8 +21,7 @@
   <div class="phone" id="phone">
 
     <div class="topbar">
-      <button class="icon-btn" id="muteBtn" title="Sound on / off">🔊</button>
-      <button class="icon-btn" id="settingsBtn" title="Settings"></button>
+      <button class="icon-flat" id="settingsBtn" title="Settings"></button>
     </div>
 
     <!-- ================= TITLE ================= -->
@@ -62,7 +61,10 @@
     <!-- ================= EXERCISE ================= -->
     <section class="screen kid" id="s-ex" style="gap:8px">
       <div class="ex-top">
-        <button class="icon-btn" id="exBack" style="width:38px;height:38px;font-size:16px">←</button>
+        <button class="icon-flat" id="exBack" title="Back">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 5 L8 12 L15 19" fill="none"
+            stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
         <div class="vine" id="vine"></div>
         <div class="stat" id="exStars"></div>
       </div>
@@ -131,7 +133,10 @@
     <section class="screen adult" id="s-adult" style="padding:22px 16px 16px">
       <div class="scroll">
         <div class="screen-head">
-          <button class="btn-ghost" id="adultBack" style="padding:9px 15px;font-size:13px">← Back</button>
+          <button class="icon-flat" id="adultBack" title="Back">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 5 L8 12 L15 19" fill="none"
+              stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
           <div id="adultChip"></div>
         </div>
         <div class="tabs" id="adultTabs">
@@ -154,7 +159,10 @@
     <section class="screen adult" id="s-settings" style="padding:22px 16px 16px">
       <div class="scroll">
         <div class="screen-head">
-          <button class="btn-ghost" id="setBack" style="padding:9px 15px;font-size:13px">← Back</button>
+          <button class="icon-flat" id="setBack" title="Back">
+            <svg viewBox="0 0 24 24" width="22" height="22"><path d="M15 5 L8 12 L15 19" fill="none"
+              stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
           <div id="setChip"></div>
         </div>
 
@@ -308,12 +316,6 @@ $('#nameGo').addEventListener('click', () => {
   voice.say(`Nice to meet you, ${store.name}! Let's follow the snake trail.`);
 });
 $('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#nameGo').click(); });
-
-/* ---------- mute ---------- */
-$('#muteBtn').addEventListener('click', () => {
-  voice.muted = !voice.muted;
-  $('#muteBtn').textContent = voice.muted ? '🔇' : '🔊';
-});
 
 /* ---------- PIN ---------- */
 let pin = '';
