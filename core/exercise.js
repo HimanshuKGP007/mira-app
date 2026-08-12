@@ -19,6 +19,13 @@
 export const TARGET_PHONE = 's';
 export const TARGET_LABEL = 'snake sound';
 
+// Bump whenever WORDS or LEVELS changes shape (words added/removed/reordered,
+// levels added/removed). rewards.js uses this to invalidate cached
+// word-bank-index data (nextWords, levels) that would otherwise silently
+// point at the wrong word after a code update — never touches real user
+// data (name, stars, xp, sessions, badges).
+export const CONTENT_VERSION = 2;
+
 export const WORDS = [
   { text: 'sun',        position: 'initial', icon: 'sun',
     phones: ['s', 'ʌ', 'n'] },

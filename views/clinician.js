@@ -112,7 +112,7 @@ function itemBlock(it, key) {
         ${inst.reason && marking === 'not_scored' ? `<div class="why">${inst.reason}</div>` : ''}
         ${gop ? `<div style="margin-top:4px;font-size:10.5px;color:var(--ink-faint);font-family:var(--font-ui)">
           post_max ${fmt(gop.post_max)} &middot; post_mean ${fmt(gop.post_mean)} &middot;
-          gop_max ${fmt(gop.gop_max)} &middot; gop_mean ${fmt(gop.gop_mean)}
+          gop_max ${fmt(gop.gop_max)} &middot; gop_mean ${fmt(gop.gop_mean)} &middot; gop_renorm ${fmt(gop.gop_renorm)}
           ${inst.durationMs != null ? ` &middot; window ${inst.durationMs}ms` : ''}</div>` : ''}
       </td>
       <td style="width:52px;text-align:right">

@@ -2,7 +2,7 @@
    Same-origin app files: network-first (so an edited module is never served
    stale), falling back to cache when offline. Cross-origin (fonts): cache-first.
    Non-GET is ignored entirely, so POST /score is never intercepted. */
-const CACHE = 'mira-v5';
+const CACHE = 'mira-v6';
 const SHELL = [
   './', './index.html', './app.css', './manifest.webmanifest',
   './icon.svg', './icon-maskable.svg',

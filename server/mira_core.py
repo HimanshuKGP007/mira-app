@@ -207,6 +207,30 @@ def frame_span(start_s, end_s, sec_per_frame, n_valid_frames):
 
 GOP_VARIANTS = ["gop_mean", "gop_max", "gop_noblank", "gop_renorm", "post_mean", "post_max"]
 
+# A real phone's aligned window is not uniform: the first and last frames are
+# coarticulation with the neighbouring sounds (onset transition in, release
+# transition out), not the phone itself, so even a correctly produced phone
+# is naturally weakest there. Trimming them before aggregating keeps
+# post_mean/gop_renorm reflecting the steady-state articulation instead of
+# being dragged down by expected edge suppression -- and, going the other
+# way, stops a brief coarticulation spike into a confusable neighbour (e.g.
+# transiting near /r/ while saying "w" for "r") from being averaged in as if
+# it were the phone's core. Skipped for very short windows where there is no
+# steady state left to isolate.
+TRIM_FRACTION = 0.20
+TRIM_MIN_FRAMES = 5   # below this, trimming would leave too little to score
+
+
+def _trim_steady_state(win):
+    """Drop the leading/trailing TRIM_FRACTION of frames, if there's room to."""
+    n = win.shape[0]
+    if n < TRIM_MIN_FRAMES:
+        return win
+    edge = int(n * TRIM_FRACTION)
+    if edge <= 0 or n - 2 * edge < 1:
+        return win
+    return win[edge:n - edge]
+
 
 def gop_variants(logprobs, lo, hi, target_id, blank_id):
     """GOP over frames [lo, hi) for one target phone.
@@ -214,6 +238,13 @@ def gop_variants(logprobs, lo, hi, target_id, blank_id):
     logprobs: [T, V] log-softmax over the model vocabulary
     Returns a dict of variants, all None if the window is empty or the target has
     no vocabulary id. Never returns a fabricated zero for a missing target.
+
+    post_max, post_mean and gop_renorm -- the signals the flag decision
+    consults -- are all computed over the trimmed steady-state region, so a
+    brief coarticulation spike at the onset/release edges (e.g. transiting
+    near a confusable neighbour while producing a substitution) can't clear
+    the flag threshold on its own. gop_max/gop_mean stay on the full window;
+    they're informational only (clinician view), not part of the gate.
     """
     out = {k: None for k in GOP_VARIANTS}
     out["n_frames"] = 0
@@ -223,6 +254,7 @@ def gop_variants(logprobs, lo, hi, target_id, blank_id):
     win = logprobs[lo:hi]                       # [n, V]
     n = win.shape[0]
     out["n_frames"] = int(n)
+    steady = _trim_steady_state(win)
 
     tgt = win[:, target_id]                      # [n]
     best = win.max(axis=1)                       # [n]
@@ -230,18 +262,23 @@ def gop_variants(logprobs, lo, hi, target_id, blank_id):
 
     out["gop_mean"] = float(ratio.mean())
     out["gop_max"] = float(ratio.max())
-    out["post_mean"] = float(np.exp(tgt).mean())
-    out["post_max"] = float(np.exp(tgt).max())
+
+    # steady-state only: excludes onset/release coarticulation frames, so an
+    # edge-only spike toward the target can't clear the flag on its own
+    steady_tgt = steady[:, target_id]
+    out["post_max"] = float(np.exp(steady_tgt).max())
+    out["post_mean"] = float(np.exp(steady_tgt).mean())
 
     argmax = win.argmax(axis=1)
     keep = argmax != blank_id
     if keep.any():
         out["gop_noblank"] = float(ratio[keep].mean())
 
-    # renormalise the posterior over non-blank tokens, then recompute the ratio
-    mask = np.ones(win.shape[1], dtype=bool)
+    # renormalise the posterior over non-blank tokens, then recompute the ratio,
+    # over the steady-state region only (see _trim_steady_state)
+    mask = np.ones(steady.shape[1], dtype=bool)
     mask[blank_id] = False
-    sub = win[:, mask]
+    sub = steady[:, mask]
     sub_norm = sub - np.log(np.sum(np.exp(sub), axis=1, keepdims=True))
     if target_id != blank_id:
         sub_idx = target_id - 1 if target_id > blank_id else target_id

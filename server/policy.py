@@ -48,6 +48,24 @@ FLAG_THRESHOLD = float(os.environ.get("MIRA_FLAG_THRESHOLD", 0.50))
 CONFIDENCE_KIND = "raw_posterior"
 
 # --------------------------------------------------------------------------
+# corroboration gate
+# --------------------------------------------------------------------------
+# post_max alone can flag a phone on one bad frame even when the rest of the
+# window and the model's discriminability both looked fine. Before honoring a
+# post_max-driven "substituted" verdict, require it to be corroborated by at
+# least one of two independent variants computed from the same window:
+#   - post_mean: was the whole window weak, not just its single worst/best frame
+#   - gop_renorm: did the model actually prefer this phone over its competitors
+# If neither corroborates, the low post_max is treated as a spike/dip rather
+# than real evidence, and the phone is marked "correct" instead. This never
+# flags a phone post_max would have passed — it only rescues borderline
+# flags, so it can only reduce false positives. UNCALIBRATED like
+# FLAG_THRESHOLD above; tune on real data.
+COMBINE_GOP_VARIANTS = os.environ.get("MIRA_COMBINE_GOP", "1") not in ("0", "false", "False")
+POST_MEAN_CORROBORATE = float(os.environ.get("MIRA_POST_MEAN_THRESHOLD", 0.50))
+GOP_RENORM_CORROBORATE = float(os.environ.get("MIRA_GOP_RENORM_THRESHOLD", -1.0))
+
+# --------------------------------------------------------------------------
 # per-phoneme reliability  [Stage 2 error_by_phoneme.csv, n >= 50]
 # --------------------------------------------------------------------------
 PHONEME_MAE = {
@@ -84,7 +102,8 @@ def is_withheld(phone_ipa):
     return mira_core.normalize_ipa(phone_ipa) in WITHHELD_PHONEMES
 
 
-def decide_marking(*, post_max, duration_ms, substitute, withheld):
+def decide_marking(*, post_max, duration_ms, substitute, withheld,
+                    post_mean=None, gop_renorm=None):
     """The marking cascade. Distortion is a flag, never a marking; there is no
     fifth column. Returns (marking, reason)."""
     if withheld:
@@ -97,6 +116,13 @@ def decide_marking(*, post_max, duration_ms, substitute, withheld):
     if duration_ms is not None and duration_ms < 40.0 and post_max < 0.20:
         return "omitted", None
     if post_max < FLAG_THRESHOLD:
+        if COMBINE_GOP_VARIANTS:
+            corroborated = (
+                (post_mean is not None and post_mean < POST_MEAN_CORROBORATE)
+                or (gop_renorm is not None and gop_renorm < GOP_RENORM_CORROBORATE)
+            )
+            if not corroborated:
+                return "correct", None
         # `substitute` may be None: we can be confident the target was not
         # produced without being able to name what replaced it. The marking
         # stands on its own; the substitute is an annotation when available.

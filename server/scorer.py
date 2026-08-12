@@ -343,6 +343,7 @@ def score_utterance(raw_bytes, prompt_word, speaker_age_years=None):
         marking, reason = policy.decide_marking(
             post_max=post_max, duration_ms=duration_ms,
             substitute=substitute, withheld=withheld,
+            post_mean=gop.get("post_mean"), gop_renorm=gop.get("gop_renorm"),
         )
         if marking != "substituted":
             substitute = None
@@ -366,7 +367,7 @@ def score_utterance(raw_bytes, prompt_word, speaker_age_years=None):
             entry["reason"] = reason
         if gop:
             entry["gop"] = {k2: _round(v) for k2, v in gop.items()
-                            if k2 in ("gop_mean", "gop_max", "post_mean", "post_max")}
+                            if k2 in ("gop_mean", "gop_max", "post_mean", "post_max", "gop_renorm")}
         phones.append(entry)
 
     scored = [p for p in phones if p["marking"] != "not_scored"]

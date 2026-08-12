@@ -39,6 +39,16 @@
       <button class="quiet" id="titleAdults">For grown-ups →</button>
     </section>
 
+    <!-- ================= NEW USER? ================= -->
+    <section class="screen kid" id="s-whoami" style="justify-content:center;align-items:center;text-align:center;gap:20px">
+      <div class="bubble" style="max-width:280px">Are you a new user?</div>
+      <div class="mira" id="mira-whoami"></div>
+      <div style="display:flex;gap:14px">
+        <button class="btn btn-primary" id="whoamiNew">Yes, I'm new</button>
+        <button class="btn btn-leaf" id="whoamiReturning">No, welcome me back</button>
+      </div>
+    </section>
+
     <!-- ================= NAME ================= -->
     <section class="screen kid" id="s-name" style="justify-content:center;align-items:center;text-align:center;gap:20px">
       <div class="bubble" style="max-width:280px">Hi! I'm Mira.<br>What's your name?</div>
@@ -48,6 +58,13 @@
         border-radius:20px;background:var(--nm);padding:14px 20px;width:252px;text-align:center;
         outline:none;box-shadow:var(--press)">
       <button class="btn btn-primary" id="nameGo">Let's go!</button>
+    </section>
+
+    <!-- ================= WELCOME BACK ================= -->
+    <section class="screen kid" id="s-welcome" style="justify-content:center;align-items:center;text-align:center;gap:20px">
+      <div class="bubble" style="max-width:280px" id="welcomeBubble">Welcome back!</div>
+      <div class="mira" id="mira-welcome"></div>
+      <button class="btn btn-primary" id="welcomeGo">Continue</button>
     </section>
 
     <!-- ================= MAP ================= -->
@@ -228,7 +245,7 @@
     </section>
 
   </div>
-  <div class="caption">Mira · prototype. Scoring comes from a research model with known limits, not a clinical device.</div>
+  <div class="caption">Mira prototype.</div>
 </div>
 
 <script type="module">
@@ -245,6 +262,8 @@ const $ = s => document.querySelector(s);
 /* ---------- mascot instances ---------- */
 $('#mira-title').innerHTML = miraSVG(158);
 $('#mira-name').innerHTML = miraSVG(148);
+$('#mira-whoami').innerHTML = miraSVG(148);
+$('#mira-welcome').innerHTML = miraSVG(148);
 $('#settingsBtn').innerHTML = icon('settings', 19);
 
 /* ---------- audio fx ---------- */
@@ -321,13 +340,24 @@ async function refreshHealth() {
 /* ---------- title / name ---------- */
 $('#titlePlay').addEventListener('click', () => {
   actx();
-  if (store.name) { Kid.renderMap(); go('#s-map'); }
+  if (store.name) { go('#s-whoami'); voice.say('Are you a new user?'); }
   else { go('#s-name'); voice.say("Hi! I'm Mira. What's your name?"); }
 });
 $('#titleAdults').addEventListener('click', () => toPin());
 $('#mapAdults').addEventListener('click', () => toPin());
 $('#mapFriends').addEventListener('click', () => { Kid.renderFriends(); go('#s-friends'); });
 $('#friendsBack').addEventListener('click', () => { Kid.renderMap(); go('#s-map'); });
+$('#whoamiNew').addEventListener('click', () => {
+  store.name = '';
+  go('#s-name');
+  voice.say("Hi! I'm Mira. What's your name?");
+});
+$('#whoamiReturning').addEventListener('click', () => {
+  $('#welcomeBubble').textContent = `Welcome back, ${store.name}!`;
+  go('#s-welcome');
+  voice.say(`Welcome back, ${store.name}!`);
+});
+$('#welcomeGo').addEventListener('click', () => { Kid.renderMap(); go('#s-map'); });
 $('#nameGo').addEventListener('click', () => {
   store.name = ($('#nameInput').value || '').trim() || 'Priya';
   Kid.renderMap();

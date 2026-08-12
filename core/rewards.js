@@ -10,11 +10,40 @@
      excluded from the crown denominator. It is never counted as a success.
    ========================================================================== */
 
+import { CONTENT_VERSION } from './exercise.js';
+
 const LS = {
   name: 'mira_name', stars: 'mira_stars', xp: 'mira_xp',
   levels: 'mira_levels', badges: 'mira_badges', reward: 'mira_reward',
   lastDone: 'mira_lastDone', sessions: 'mira_sessions', nextWords: 'mira_nextWords',
+  contentVersion: 'mira_content_version', resetVersion: 'mira_reset_version',
 };
+
+// One-time full wipe for a fresh testing pass, requested 2026-08-12. Bump
+// RESET_VERSION again in the future to force another full wipe.
+const RESET_VERSION = 1;
+(function resetOnce() {
+  if (localStorage.getItem(LS.resetVersion) !== String(RESET_VERSION)) {
+    Object.values(LS).forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(LS.resetVersion, String(RESET_VERSION));
+  }
+})();
+
+// If the word bank / level list has changed shape since this browser last
+// saved data, cached word-bank-index pointers (nextWords, per-level done/
+// crown state keyed by level id) can point at different content than what
+// the child actually played — e.g. a "Practice Trail" built from indices
+// that used to mean one /s/ word and now mean another, or no longer exist.
+// Clear only that derived cache on a version mismatch. Real user data
+// (name, stars, xp, sessions, badges, lastDone, reward) is never touched.
+(function invalidateStaleContentCache() {
+  const stored = localStorage.getItem(LS.contentVersion);
+  if (stored !== String(CONTENT_VERSION)) {
+    localStorage.removeItem(LS.nextWords);
+    localStorage.removeItem(LS.levels);
+    localStorage.setItem(LS.contentVersion, String(CONTENT_VERSION));
+  }
+})();
 
 export const STAR_PER_CORRECT = 5;
 export const XP_PER_ITEM = 10;
