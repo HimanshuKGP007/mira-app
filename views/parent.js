@@ -147,6 +147,7 @@ function lastSessionCard(r, name) {
 function positionCard(agg) {
   const order = ['initial', 'medial', 'final'];
   const label = { initial: 'Start of words', medial: 'Middle of words', final: 'End of words' };
+  const zoneIcon = { initial: 'zoneStart', medial: 'zoneMiddle', final: 'zoneEnd' };
   const rows = order.filter(p => agg.byPosition[p]).map(p => {
     const v = agg.byPosition[p];
     const total = v.scored + v.notScored || 1;
@@ -154,13 +155,16 @@ function positionCard(agg) {
     const flagPct = ((v.scored - v.clear) / total) * 100;
     const nsPct = (v.notScored / total) * 100;
     return `
-      <div class="posrow">
-        <div class="top"><span>${label[p]}</span>
-          <span class="ex">${v.clear} clear · ${v.scored - v.clear} flagged${v.notScored ? ` · ${v.notScored} not scored` : ''}</span></div>
-        <div class="track">
-          <div class="fill clear" style="width:${clearPct}%"></div>
-          <div class="fill flag" style="width:${flagPct}%"></div>
-          <div class="fill ns" style="width:${nsPct}%"></div>
+      <div class="posrow" style="display:flex;align-items:center;gap:10px">
+        <div style="width:40px;height:40px;flex:0 0 auto">${icon(zoneIcon[p], 40)}</div>
+        <div style="flex:1">
+          <div class="top"><span>${label[p]}</span>
+            <span class="ex">${v.clear} clear · ${v.scored - v.clear} flagged${v.notScored ? ` · ${v.notScored} not scored` : ''}</span></div>
+          <div class="track">
+            <div class="fill clear" style="width:${clearPct}%"></div>
+            <div class="fill flag" style="width:${flagPct}%"></div>
+            <div class="fill ns" style="width:${nsPct}%"></div>
+          </div>
         </div>
       </div>`;
   }).join('');
