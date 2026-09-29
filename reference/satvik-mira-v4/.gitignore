@@ -1,0 +1,28 @@
+# Secrets / server runtime state — never commit
+server/.secret
+server/mira.db
+server/mira.db-journal
+server/mira.db-wal
+server/mira.db-shm
+server/.env
+.env
+.env.local
+
+# Python
+server/.venv/
+server/__pycache__/
+__pycache__/
+*.pyc
+
+# Node / frontend build (Phase 3 — landing page)
+node_modules/
+landing/node_modules/
+landing-dist/
+landing/dist/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+
+# Local scratch
+*.local

@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "mira-server",
+      "runtimeExecutable": "server/run.sh",
+      "runtimeArgs": [],
+      "port": 8000
+    },
+    {
+      "name": "mira-landing-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "landing-src"],
+      "port": 5173
+    }
+  ]
+}

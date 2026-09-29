@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mira — Speech Practice</title>
+<meta name="theme-color" content="#ECEFF6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Mira">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.svg">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sigmar&family=Baloo+2:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+
+    <!-- ================= TITLE ================= -->
+    <section class="screen kid active" id="s-title" style="justify-content:center;align-items:center;text-align:center;gap:6px">
+      <div style="position:relative;width:100%;height:280px;display:grid;place-items:center">
+        <div class="mira" id="mira-title"></div>
+      </div>
+      <div style="font-family:var(--font-kid);font-weight:400;font-size:58px;line-height:1;
+        color:var(--grape);filter:drop-shadow(3px 4px 0 rgba(49,51,55,.14))">Mira</div>
+      <div style="font-family:var(--font-kid);font-size:17px;font-weight:400;color:var(--ink-soft);margin-bottom:6px">
+        Snake Sound Trail</div>
+      <div id="titleChip" style="margin-bottom:12px"></div>
+      <button class="btn btn-leaf" id="titlePlay">Tap to Play</button>
+      <button class="quiet" id="titleAdults">For grown-ups →</button>
+    </section>
+
+    <!-- ================= NAME ================= -->
+    <section class="screen kid" id="s-name" style="justify-content:center;align-items:center;text-align:center;gap:20px">
+      <div class="bubble" style="max-width:280px">Hi! I'm Mira.<br>What's your name?</div>
+      <div class="mira" id="mira-name"></div>
+      <input id="nameInput" type="text" maxlength="14" placeholder="Priya" autocomplete="off"
+        style="font-family:var(--font-kid);font-size:21px;font-weight:600;color:var(--ink);border:none;
+        border-radius:20px;background:var(--bone);padding:14px 20px;width:252px;text-align:center;
+        outline:none;box-shadow:var(--press-flat)">
+      <button class="btn btn-primary" id="nameGo">Let's go!</button>
+    </section>
+
+    <!-- ================= MAP ================= -->
+    <section class="screen kid" id="s-map" style="padding:0">
+      <div class="map-hud" id="mapHud"></div>
+      <div class="bubble map-bubble" id="mapBubble" style="display:none"></div>
+      <div class="map-world" id="mapWorld"></div>
+    </section>
+
+    <!-- ================= STICKER STASH ================= -->
+    <section class="screen kid" id="s-stash" style="padding:0">
+      <div class="stash-head">
+        <div class="t">Sticker Stash</div>
+        <div class="sub">Trophies you've earned along the trail.</div>
+      </div>
+      <div id="stashBody" style="overflow-y:auto;padding-bottom:78px"></div>
+    </section>
+
+    <!-- ================= EXERCISE ================= -->
+    <section class="screen kid" id="s-ex" style="gap:8px">
+      <div class="ex-top">
+        <button class="icon-btn" id="exBack" style="width:38px;height:38px;font-size:16px">←</button>
+        <div class="vine" id="vine"></div>
+        <div class="stat" id="exStars"></div>
+      </div>
+      <div class="card-zone">
+        <div class="pic-card" id="picCard">
+          <div class="art" id="cardArt"></div>
+          <div class="word" id="cardWord"></div>
+        </div>
+      </div>
+      <div id="exAlert" class="alert info" style="display:none;margin-top:6px"></div>
+      <div style="text-align:center;display:flex;gap:8px;justify-content:center">
+        <button class="btn-ghost" id="retryBtn" style="display:none">Try again</button>
+      </div>
+      <div class="mira-row">
+        <div class="mira" id="mira-ex"></div>
+        <div class="bubble" id="exBubble">What is this?</div>
+      </div>
+      <div class="mic-zone">
+        <div class="wave-wrap"><canvas id="wave" width="210" height="40"></canvas></div>
+        <button class="mic-btn" id="micBtn">
+          <svg viewBox="0 0 24 24" style="width:32px;height:32px"><rect x="9" y="3" width="6" height="11" rx="3" fill="#fff"/>
+            <path d="M5.5 11.5 a6.5 6.5 0 0 0 13 0" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>
+            <line x1="12" y1="18" x2="12" y2="21" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>
+          <svg class="sweep" viewBox="0 0 100 100">
+            <circle id="sweepArc" cx="50" cy="50" r="47" fill="none" stroke="#fff" stroke-width="5"
+              stroke-linecap="round" stroke-dasharray="295.3" stroke-dashoffset="295.3" transform="rotate(-90 50 50)"/>
+          </svg>
+        </button>
+        <div class="mic-hint" id="micHint">Tap and say it!</div>
+      </div>
+    </section>
+
+    <!-- ================= LEVEL COMPLETE ================= -->
+    <section class="screen kid" id="s-done">
+      <div class="confetti" id="confetti"></div>
+      <div class="mira" id="mira-done"></div>
+      <div class="done-title" id="doneTitle">Trail cleared!</div>
+      <div class="crowns-big" id="crownsBig"></div>
+      <div class="done-sub" id="doneSub"></div>
+      <div class="reward-row" id="rewardRow"></div>
+      <div class="xp-wrap">
+        <div class="xp-label"><span id="xpLabel"></span><span id="xpPct"></span></div>
+        <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+      </div>
+      <div id="badgePops"></div>
+      <div style="display:flex;flex-direction:column;gap:9px;align-items:center;margin-top:4px">
+        <button class="btn btn-leaf" id="doneNext">Next trail</button>
+        <button class="quiet" id="doneMap">Back to map</button>
+      </div>
+    </section>
+
+    <!-- ================= PIN ================= -->
+    <section class="screen adult" id="s-pin">
+      <h2>For grown-ups</h2>
+      <div class="pin-sub">Enter your PIN · demo: any four digits</div>
+      <div class="pin-dots" id="pinDots">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="keypad" id="keypad"></div>
+      <button class="quiet" id="pinBack">← Back</button>
+    </section>
+
+    <!-- ================= PARENT (clinician content merged in, Phase 2d) === -->
+    <section class="screen adult" id="s-adult" style="padding:22px 16px 16px">
+      <div class="scroll">
+        <div class="screen-head">
+          <button class="btn-ghost" id="adultBack" style="padding:9px 15px;font-size:13px">← Back</button>
+          <div id="adultChip"></div>
+          <button class="icon-btn" id="settingsBtn" title="Settings" style="margin-left:8px"></button>
+        </div>
+        <div class="p-head"><h2 id="pName">—</h2><div class="meta" id="pMeta"></div></div>
+        <div id="parentBody" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
+      </div>
+    </section>
+
+    <!-- ================= SETTINGS ================= -->
+    <section class="screen adult" id="s-settings" style="padding:22px 16px 16px">
+      <div class="scroll">
+        <div class="screen-head">
+          <button class="btn-ghost" id="setBack" style="padding:9px 15px;font-size:13px">← Back</button>
+          <div id="setChip"></div>
+        </div>
+
+        <div class="card">
+          <h3>Account</h3>
+          <div id="accountInfo" class="note">—</div>
+          <button class="btn-ghost" id="signOutBtn" style="width:100%;margin-top:11px">Sign out</button>
+        </div>
+
+        <div class="card">
+          <h3>Scorer endpoint</h3>
+          <div class="field">
+            <label>Base URL</label>
+            <input id="endpointInput" type="url" placeholder="https://your-gpu-box.example.com" autocomplete="off">
+          </div>
+          <div class="note">Mira will POST audio to <b>&lt;base&gt;/score</b> as multipart form data
+          (<code>audio</code>, <code>prompt_word</code>, <code>speaker_age_years</code>) and expects the
+          documented contract back. Audio is sent as 16 kHz mono PCM16 WAV.</div>
+          <div style="display:flex;gap:8px;margin-top:11px">
+            <button class="btn-ghost" id="saveEndpoint" style="flex:1">Save</button>
+            <button class="btn-ghost" id="testEndpoint" style="flex:1">Test</button>
+          </div>
+          <div id="endpointStatus" class="note" style="margin-top:9px"></div>
+        </div>
+
+        <div class="card">
+          <h3>Scorer</h3>
+          <div id="scorerInfo" class="note">Not connected.</div>
+        </div>
+
+        <div class="card">
+          <h3>Trail music</h3>
+          <div class="toggle">
+            <div><div class="lab">Play music on the map</div>
+              <div class="sub">A short generated tune, different for every trail. Stops
+              automatically during recording so it never competes with the mic.</div></div>
+            <button class="switch" id="musicSwitch"><i></i></button>
+          </div>
+          <div class="field">
+            <label>Volume</label>
+            <input id="musicVolume" type="range" min="0" max="1" step="0.05" style="width:100%">
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Voice</h3>
+          <div class="field">
+            <label>ElevenLabs API key (optional)</label>
+            <input id="elevenKey" type="password" placeholder="leave blank for the built-in voice" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Voice ID</label>
+            <input id="elevenVoice" type="text" placeholder="EXAVITQu4vr4xnSDxMaL" autocomplete="off">
+          </div>
+          <button class="btn-ghost" id="saveVoice" style="width:100%">Save voice settings</button>
+        </div>
+
+        <div class="card">
+          <h3>Walkthrough</h3>
+          <button class="btn-ghost" id="replayTourBtn" style="width:100%">Show the tour again</button>
+          <div class="note" style="margin-top:9px">Replays the first-run spotlight walkthrough
+          on the trail map, the first word, and this grown-up view.</div>
+        </div>
+
+        <div class="card">
+          <h3>Data</h3>
+          <button class="btn-ghost" id="exportBtn" style="width:100%;margin-bottom:8px">Export sessions &amp; corrections</button>
+          <button class="btn-ghost" id="resetBtn" style="width:100%">Reset all local data</button>
+          <div class="note" style="margin-top:9px">Everything is stored on this device only.
+          Clinician overrides keep both values — Mira's marking is never overwritten.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FLOATING DOCK (Phase 2a) ================= -->
+    <nav class="dock hidden" id="dock">
+      <button class="dock-item" id="dockTrail" data-dock="trail"></button>
+      <button class="dock-item" id="dockStash" data-dock="stash"></button>
+      <button class="dock-item" id="dockSound" data-dock="sound"></button>
+      <button class="dock-item" id="dockAdults" data-dock="adults"></button>
+    </nav>
+
+  </div>
+  <div class="caption">Mira — prototype. Scoring comes from a research model with known limits; not a clinical device.</div>
+</div>
+
+<script type="module">
+import { miraSVG, icon } from './views/icons.js';
+import * as Kid from './views/kid.js';
+import * as Parent from './views/parent.js';
+import { store, onProgressChange, onSessionCommit } from './core/rewards.js';
+import { config, ping } from './core/client.js';
+import { voice } from './core/voice.js';
+import { account, api, bounceToSignIn } from './core/auth.js';
+import { music } from './core/music.js';
+import { sfx } from './core/sfx.js';
+import { unlock as unlockAudio } from './core/audio.js';
+import { resetAll as resetOnboarding } from './core/onboarding.js';
+
+const $ = s => document.querySelector(s);
+
+/* ---------- mascot instances ---------- */
+$('#mira-title').innerHTML = miraSVG(158);
+$('#mira-name').innerHTML = miraSVG(148);
+$('#settingsBtn').innerHTML = icon('gear', 19);
+
+/* ---------- router ---------- */
+const MUSIC_SCREENS = new Set(['#s-map', '#s-done']);
+// The dock is a persistent overlay (not one of the .screen sections), shown
+// only where a top-level nav choice makes sense — hidden on title/name (no
+// destination to switch to yet), the exercise screen (nothing should compete
+// with the mic), and the PIN/settings screens (focused, modal-like flows).
+const DOCK_SCREENS = new Set(['#s-map', '#s-done', '#s-stash', '#s-adult']);
+function go(id) {
+  voice.stop();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+  // Music belongs to the map/celebration — it must never compete with the mic
+  // on the exercise screen, and elsewhere (title, forms, settings) it would
+  // just be noise.
+  if (MUSIC_SCREENS.has(id)) music.start(Kid.currentLevelSeed());
+  else music.stop();
+  paintDock(id);
+}
+
+function paintDock(activeId) {
+  const dock = $('#dock');
+  dock.classList.toggle('hidden', !DOCK_SCREENS.has(activeId));
+  const activeDockKey = { '#s-map': 'trail', '#s-stash': 'stash', '#s-adult': 'adults' }[activeId];
+  dock.querySelectorAll('.dock-item').forEach(b => b.classList.toggle('active', b.dataset.dock === activeDockKey));
+}
+
+voice.onTalking(on => { Kid.miraTalking(on); music.duck(on); });
+
+Kid.init({ go, say: t => voice.say(t), sfx: k => sfx.play(k), signOut: doSignOut });
+
+/* ---------- generic tap sound ----------------------------------------
+   core/sfx.js ships 19 cues, but only the 5 gameplay ones (chime/soft/
+   sparkle/crown/tada) and the PIN keypad's blip were ever actually wired
+   to anything — every other button was silent even with Sound switched
+   on. One delegated listener covers the common buttons; dock items, map
+   nodes and the mic button get their own more specific cues below instead
+   of this generic one, so they don't double up. */
+document.body.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.dock-item, .node, .key, .mic-btn')) return;
+  if (e.target.closest('.btn, .icon-btn, .quiet, .btn-ghost')) sfx.play('tap');
+});
+
+/* ---------- account: hydrate on boot, push on change ---------- */
+async function doSignOut() {
+  try { await api.logout(); } catch {}
+  bounceToSignIn();
+}
+$('#signOutBtn').addEventListener('click', doSignOut);
+
+let _pushTimer = null;
+function schedulePush() {
+  if (!account.childId) return;
+  clearTimeout(_pushTimer);
+  _pushTimer = setTimeout(() => {
+    api.putProgress(account.childId, store.snapshot()).catch(() => {});
+  }, 1200);                                        // debounced: many stars fly per session
+}
+onProgressChange(schedulePush);
+onSessionCommit(record => {
+  if (!account.childId) return;
+  api.postSession(account.childId, record).catch(() => {});
+});
+
+async function bootAccount() {
+  if (!account.childId) { bounceToSignIn(); return false; }
+  try {
+    const snap = await api.getProgress(account.childId);
+    store.hydrate(snap);                            // server wins, on purpose
+  } catch (e) {
+    if (e.status === 401 || e.status === 404) { bounceToSignIn(); return false; }
+    // offline or a transient error: keep playing on the local copy rather
+    // than blocking the child from practising.
+  }
+  const info = $('#accountInfo');
+  if (info) {
+    try {
+      const me = await api.me();
+      info.innerHTML = me.signed_in
+        ? `Signed in as <b>${me.email}</b><br>Playing as <b>${store.name || account.childName}</b>`
+        : 'Not signed in.';
+    } catch { info.textContent = 'Could not reach the account server.'; }
+  }
+  return true;
+}
+
+/* ---------- status chip ---------- */
+let scorerHealth = null;
+function chipHTML() {
+  if (!config.configured) return `<span class="chip off"><i class="dot"></i>No scorer configured</span>`;
+  if (scorerHealth === null) return `<span class="chip"><i class="dot"></i>Checking scorer…</span>`;
+  if (scorerHealth === false) return `<span class="chip off"><i class="dot"></i>Scorer unreachable</span>`;
+  return `<span class="chip live"><i class="dot"></i>Scorer connected</span>`;
+}
+function paintChips() {
+  ['#titleChip', '#adultChip', '#setChip'].forEach(s => { const e = $(s); if (e) e.innerHTML = chipHTML(); });
+}
+/** Probe once at boot and after any endpoint change, so the chip is truthful. */
+async function refreshHealth() {
+  if (!config.configured) { scorerHealth = false; paintChips(); return null; }
+  scorerHealth = null; paintChips();
+  const r = await ping();
+  scorerHealth = r.ok;
+  paintChips();
+  const info = $('#scorerInfo');
+  if (info) {
+    info.innerHTML = r.ok
+      ? `<b>${r.health.tier}</b> on ${r.health.device}<br>${r.health.description}
+         <br><br>Measured AUC <b>${r.health.expected_auc}</b> · PCC ${r.health.expected_pcc}
+         (the trained ensemble reaches 0.843 / 0.376 but needs artifacts that are not installed).
+         <br>Confidence is a <b>${r.health.confidence_kind.replace('_', ' ')}</b> — uncalibrated;
+         flag threshold ${r.health.flag_threshold}.
+         <br>Declines: ${r.health.withheld_phonemes.map(p => `/${p}/`).join(' ')}`
+      : r.message;
+  }
+  return r;
+}
+
+/* ---------- title / name ---------- */
+$('#titlePlay').addEventListener('click', () => {
+  unlockAudio();
+  if (store.name) { Kid.renderMap(); go('#s-map'); }
+  else { go('#s-name'); sfx.play('miraHello'); voice.say("Hi! I'm Mira. What's your name?"); }
+});
+$('#titleAdults').addEventListener('click', () => toPin());
+$('#nameGo').addEventListener('click', () => {
+  store.name = ($('#nameInput').value || '').trim() || 'Priya';
+  Kid.renderMap();
+  go('#s-map');
+  voice.say(`Nice to meet you, ${store.name}! Let's follow the snake trail.`);
+});
+$('#nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') $('#nameGo').click(); });
+
+/* ---------- floating dock (Phase 2a) ----------------------------------
+   sfx.enabled persists across reloads; voice.muted does not (it's an
+   in-memory flag on core/voice.js) — sfx's stored value is the source of
+   truth for the combined mute state at boot, so the Sound icon never lies. */
+if (!sfx.enabled) voice.muted = true;
+$('#dockTrail').innerHTML = `<span class="dock-badge">${icon('home', 20)}</span><span class="dock-label">Trail</span>`;
+$('#dockStash').innerHTML = `<span class="dock-badge">${icon('trophy', 20, { animate: false })}</span><span class="dock-label">Stash</span>`;
+$('#dockSound').innerHTML = `<span class="dock-badge"><span id="dockSoundIcon" style="font-size:17px;line-height:1">${voice.muted ? '🔇' : '🔊'}</span></span><span class="dock-label">Sound</span>`;
+$('#dockAdults').innerHTML = `<span class="dock-badge">${icon('shield', 20)}</span><span class="dock-label">Grown-ups</span>`;
+
+$('#dockTrail').addEventListener('click', () => { sfx.play('dockTap'); Kid.renderMap(); go('#s-map'); });
+$('#dockStash').addEventListener('click', () => { sfx.play('dockTap'); Kid.renderStash(); go('#s-stash'); });
+$('#dockSound').addEventListener('click', () => {
+  const next = !voice.muted;
+  voice.muted = next;
+  sfx.enabled = !next;
+  $('#dockSoundIcon').textContent = next ? '🔇' : '🔊';
+  // Play the confirmation AFTER flipping state, and only when turning sound
+  // ON — muting should be silent (that's the whole point), but unmuting was
+  // otherwise indistinguishable from a toggle that did nothing at all.
+  if (!next) sfx.play('dockTap');
+});
+$('#dockAdults').addEventListener('click', () => { sfx.play('dockTap'); toPin(); });
+
+/* ---------- PIN ---------- */
+let pin = '';
+['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k => {
+  const b = document.createElement('button');
+  b.className = 'key' + (k === '' ? ' blank' : '');
+  b.textContent = k;
+  b.addEventListener('click', () => {
+    if (k === '⌫') pin = pin.slice(0, -1);
+    else if (k && pin.length < 4) { pin += k; sfx.blip(700 + pin.length * 60, { dur: .07, peak: .4 }); }
+    [...$('#pinDots').children].forEach((d, i) => d.classList.toggle('fill', i < pin.length));
+    if (pin.length === 4) setTimeout(openAdult, 260);
+  });
+  $('#keypad').appendChild(b);
+});
+function toPin() {
+  pin = '';
+  [...$('#pinDots').children].forEach(d => d.classList.remove('fill'));
+  go('#s-pin');
+}
+$('#pinBack').addEventListener('click', () => { Kid.renderMap(); go(store.name ? '#s-map' : '#s-title'); });
+
+/* ---------- adult (parent view — clinician content merged in, Phase 2d) */
+function openAdult() {
+  paintChips();
+  Parent.render();
+  go('#s-adult');
+}
+$('#adultBack').addEventListener('click', () => { Kid.renderMap(); go(store.name ? '#s-map' : '#s-title'); });
+
+/* ---------- settings ---------- */
+$('#settingsBtn').addEventListener('click', () => {
+  $('#endpointInput').value = config.endpoint;
+  $('#elevenKey').value = voice.elevenKey;
+  $('#elevenVoice').value = voice.elevenVoice;
+  $('#musicSwitch').classList.toggle('on', music.enabled);
+  $('#musicVolume').value = String(music.volume);
+  $('#endpointStatus').textContent = '';
+  paintChips();
+  refreshHealth();
+  go('#s-settings');
+});
+$('#musicSwitch').addEventListener('click', () => {
+  music.enabled = !music.enabled;
+  $('#musicSwitch').classList.toggle('on', music.enabled);
+});
+$('#musicVolume').addEventListener('input', e => { music.volume = Number(e.target.value); });
+$('#setBack').addEventListener('click', () => { paintChips(); Parent.render(); go('#s-adult'); });
+$('#saveEndpoint').addEventListener('click', async () => {
+  config.endpoint = $('#endpointInput').value;
+  $('#endpointInput').value = config.endpoint;
+  $('#endpointStatus').textContent = 'Saved. Checking…';
+  const r = await refreshHealth();
+  $('#endpointStatus').textContent = r ? r.message : 'No endpoint configured.';
+});
+$('#testEndpoint').addEventListener('click', async () => {
+  config.endpoint = $('#endpointInput').value;
+  $('#endpointStatus').textContent = 'Checking…';
+  const r = await refreshHealth();
+  $('#endpointStatus').textContent = r ? r.message : 'No endpoint configured.';
+});
+$('#saveVoice').addEventListener('click', () => {
+  voice.elevenKey = $('#elevenKey').value;
+  voice.elevenVoice = $('#elevenVoice').value;
+  $('#endpointStatus').textContent = 'Voice settings saved.';
+});
+$('#exportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({
+    sessions: store.sessions,
+    corrections: Parent.exportCorrections(),
+    exported_at: new Date().toISOString(),
+  }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'mira-sessions.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('#resetBtn').addEventListener('click', () => {
+  if (!confirm('Delete all local sessions, stars and corrections?')) return;
+  store.reset();
+  localStorage.removeItem('mira_corrections');
+  location.reload();
+});
+$('#replayTourBtn').addEventListener('click', () => {
+  resetOnboarding();
+  Kid.renderMap();
+  go('#s-map');
+});
+
+/* ---------- PWA ---------- */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+
+/* ---------- boot ---------- */
+if (!account.childId) { bounceToSignIn(); }
+else {
+  if (account.childName) store.name = account.childName;   // synchronous, before first paint
+  paintChips();
+  refreshHealth();
+  go('#s-title');
+  bootAccount();                                            // async: server hydrate + account card
+}
+</script>
+</body>
+</html>

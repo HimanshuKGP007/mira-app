@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* The ONE shared source of truth for color/type/geometry — same file
+   app.css imports for the /app/ PWA. Nothing in this project should
+   hardcode a color literal or a radius that isn't defined there. */
+@import "../../design/tokens.css";
+
+@theme {
+  --color-sky: var(--sky);
+  --color-sky-d: var(--sky-d);
+  --color-sky-soft: var(--sky-soft);
+  --color-sun: var(--sun);
+  --color-sun-d: var(--sun-d);
+  --color-sun-soft: var(--sun-soft);
+  --color-grape: var(--grape);
+  --color-grape-d: var(--grape-d);
+  --color-grape-soft: var(--grape-soft);
+  --color-clay: var(--clay);
+  --color-clay-d: var(--clay-d);
+  --color-clay-soft: var(--clay-soft);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-bone: var(--bone);
+  --color-bone-d: var(--bone-d);
+  --color-mark-correct: var(--mark-correct);
+  --color-mark-flagged: var(--mark-flagged);
+  --color-mark-notscored: var(--mark-notscored);
+
+  --font-display: var(--font-display);
+  --font-kid: var(--font-kid);
+  --font-body: var(--font-body);
+  --font-ui: var(--font-ui);
+
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-xl: var(--r-xl);
+  --radius-pill: var(--r-pill);
+  --radius-squircle: var(--r-squircle);
+  --radius-blob-a: var(--r-blob-a);
+  --radius-blob-b: var(--r-blob-b);
+}
+
+body {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background: var(--bone);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* No straight lines in the kid-facing register — see design/tokens.css's
+   header for the four techniques. Utility hooks so components don't need
+   inline styles for the two shapes that recur constantly. */
+.shape-squircle { border-radius: var(--r-squircle); }
+.shape-blob-a { border-radius: var(--r-blob-a); }
+.shape-blob-b { border-radius: var(--r-blob-b); }
+.halo { box-shadow: var(--halo); }
+.lift { box-shadow: var(--lift); }
+.lift-lg { box-shadow: var(--lift-lg); }
+
+::selection { background: var(--sky); color: #fff; }
+
+/* Mira's idle motion — same values as /app/'s app.css so she moves
+   identically on both surfaces. */
+.mira-svg { overflow: visible; }
+.m-all { transform-box: fill-box; transform-origin: 50% 92%; animation: bob 2.8s ease-in-out infinite; }
+@keyframes bob { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-7px) rotate(-1deg); } }
+.m-trunk { transform-box: fill-box; transform-origin: 50% 6%; animation: sway 3.4s ease-in-out infinite; }
+@keyframes sway { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(4deg); } }
+.m-lid { transform-box: fill-box; transform-origin: center top; transform: scaleY(0); animation: blink 5s infinite; }
+@keyframes blink { 0%, 93.5%, 97.5%, 100% { transform: scaleY(0); } 95.5% { transform: scaleY(1); } }
+.m-mouth { transform-box: fill-box; transform-origin: center; transform: scaleY(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .m-all, .m-trunk, .m-lid { animation: none !important; }
+}

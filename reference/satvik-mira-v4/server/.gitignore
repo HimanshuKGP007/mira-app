@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+.secret
+mira.db
+mira.db-journal
+mira.db-wal
+mira.db-shm
+.env

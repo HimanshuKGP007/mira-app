@@ -1,0 +1,27 @@
+{
+  "name": "Mira — Speech Practice",
+  "short_name": "Mira",
+  "description": "Speech sound practice for children, scored by an on-device pronunciation model. Follow the Snake Trail with Mira, earn stars for sounds the model marks correct, and review an honest summary as a parent or clinician.",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ECEFF6",
+  "theme_color": "#ECEFF6",
+  "categories": ["education", "kids", "health"],
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+/* ============================================================================
+   design/tokens.css — the ONE source of truth for color, type and geometry
+   across both surfaces: app.css (vanilla, /app/) and the React landing's
+   Tailwind @theme (landing/src/styles.css). Nothing in either surface should
+   hardcode a color literal or a radius that isn't in here.
+
+   Palette + display font are taken directly from the brand spec sheet:
+   Sigmar / #01ADFF sky / #FFF738 sun / #C669FF grape / #FF8038 clay /
+   #FFFFFF paper / #313337 ink.
+
+   Geometry follows one rule throughout the product: NO STRAIGHT LINES.
+   Section edges are SVG wave bands, panels are squircles or blobs, dividers
+   are rounded strokes. See the four techniques documented inline below.
+   ========================================================================== */
+:root{
+  /* ---------- brand ---------- */
+  --sky:#01ADFF;    --sky-d:#0090D6;    --sky-soft:#D9F1FF;
+  --sun:#FFF738;    --sun-d:#E8DE1F;    --sun-soft:#FFFCD1;
+  --grape:#C669FF;  --grape-d:#A945E0;  --grape-soft:#F3E3FF;
+  --clay:#FF8038;   --clay-d:#E0641C;   --clay-soft:#FFE4D1;
+  --paper:#FFFFFF;
+  --ink:#313337;    --ink-soft:#6B6E76; --ink-faint:#9A9DA5;
+  --bone:#FBF7EF;   --bone-d:#EDE7D8;   /* warm off-white ground, not cold grey */
+
+  /* ---------- semantic (clinical states — must stay legible at a glance) --- */
+  --mark-correct:#2FA84F;   --mark-correct-d:#1F8A3C;
+  --mark-flagged:#FF8038;   --mark-flagged-d:#E0641C;   /* == --clay, distortion/error */
+  --mark-notscored:#9A9DA5;                              /* deliberately neutral, never alarming */
+  --mark-error:#E24B4B;     --mark-error-d:#C43535;
+
+  /* ---------- spacing scale ---------- */
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px;
+  --sp-6:24px; --sp-7:32px; --sp-8:40px; --sp-9:56px; --sp-10:72px;
+
+  /* ---------- type scale ---------- */
+  --t-xs:12px; --t-sm:13.5px; --t-base:15px; --t-md:17px; --t-lg:19px;
+  --t-xl:23px; --t-2xl:29px; --t-3xl:38px; --t-4xl:52px;
+
+  /* ---------- fonts ----------
+     Sigmar is the display voice — big headlines, the wordmark, scores.
+     Baloo 2 carries kid body copy and UI chrome inside the game.
+     Nunito carries the calmer parent/adult register.
+     (Fredoka is retired; --font-kid now leads with Sigmar so every existing
+     rule that already reads var(--font-kid) picks up the new voice for free.) */
+  --font-display:"Sigmar","Baloo 2",system-ui,sans-serif;
+  --font-kid:"Sigmar","Baloo 2",system-ui,sans-serif;
+  --font-body:"Baloo 2",system-ui,sans-serif;
+  --font-ui:"Nunito",system-ui,sans-serif;
+
+  /* ---------- geometry: no straight lines ----------
+     1. Section edges / ground / water line / dividers → SVG wave paths
+        (see the map's ground hill in views/kid.js — that's the model).
+     2. Cards & panels → --r-squircle / --r-xl, never a uniform small radius;
+        every card carries --halo so it reads as a sticker laid on the page.
+     3. Category / chapter tiles → --r-blob-a / --r-blob-b, alternating, so
+        no two adjacent tiles share a silhouette.
+     4. Progress bars, HUD dividers → round-capped SVG strokes, never a
+        border-top / 1px rule. */
+  --r-md:20px; --r-lg:28px; --r-xl:36px; --r-pill:999px;
+  --r-squircle:42% 42% 42% 42% / 34% 34% 34% 34%;
+  --r-blob-a:58% 42% 46% 54% / 52% 48% 52% 48%;
+  --r-blob-b:44% 56% 60% 40% / 46% 40% 60% 54%;
+
+  /* ---------- shadow / depth ----------
+     Flat hard shadow + a soft halo ring — replaces the old dual-tone
+     neumorphic system everywhere it's actually rewritten (Phase 2). */
+  --halo:0 0 0 5px rgba(255,255,255,.9);
+  --lift:0 5px 0 rgba(49,51,55,.14), var(--halo);
+  --lift-lg:0 9px 0 rgba(49,51,55,.16), 0 0 0 7px rgba(255,255,255,.92);
+  --lift-sm:0 3px 0 rgba(49,51,55,.12), 0 0 0 3px rgba(255,255,255,.85);
+  --lift-float:0 14px 28px rgba(49,51,55,.22);        /* floating dock / corner buttons */
+  --press-flat:inset 0 3px 0 rgba(49,51,55,.16);
+  --press-flat-sm:inset 0 2px 0 rgba(49,51,55,.13);
+
+  /* ---------- motion easings (core/motion.js uses these names) ---------- */
+  --pop:cubic-bezier(.34,1.56,.64,1);
+  --ease-organic:cubic-bezier(.4,.14,.3,1);
+
+  /* ==========================================================================
+     LEGACY ALIASES — bridges the old neumorphic variable names in app.css so
+     every existing rule keeps compiling and immediately picks up the new
+     palette/geometry. Phase 2 rewrites components one at a time against the
+     tokens above directly; once every rule in app.css has been migrated,
+     this block gets deleted and app.css's header comment updated.
+     ========================================================================== */
+  --nm:var(--bone); --nm-d:#D8CFB8; --nm-l:#ffffff;
+  --raise:var(--lift); --raise-lg:var(--lift-lg); --raise-sm:var(--lift-sm);
+  --press:var(--press-flat); --press-sm:var(--press-flat-sm);
+
+  --vio:var(--grape); --vio-d:var(--grape-d); --vio-soft:var(--grape-soft);
+  --teal:#2BC9C2; --teal-d:#1FA8A2;               /* mic button — distinct from sky/grape */
+  --gold:#FFC93C; --gold-d:#E0A81E;               /* stars/crowns — warm, close to --sun family */
+  --green:var(--mark-correct); --green-d:var(--mark-correct-d);
+  --amber:var(--mark-flagged); --amber-d:var(--mark-flagged-d);
+  --red:var(--mark-error); --red-d:var(--mark-error-d);
+  --slate:var(--mark-notscored);
+  --leaf:var(--sky); --leaf-d:var(--sky-d);       /* primary "go" actions read as brand blue */
+}
