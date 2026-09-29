@@ -47,7 +47,68 @@
 - **UltraSuite:** 58 typical kids and about 65 kids with speech sound disorders. Closest public match to Mira's users. Non-commercial, British.
 - **NNCES:** Indian kids aged 8 to 12, Telugu first language. Not yet acquired.
 
+## Prevalence (added 29 Sep 2026, direction check)
+- **[Mysuru school study (2026), Clinical Epidemiology and Global Health](https://www.sciencedirect.com/science/article/pii/S2213398426000941)**
+  707 kids aged 6 to 11 in Mysuru government schools. 5.9% confirmed speech and/or language disorders. Language disorders were 64.1% of those, speech 35.9%, so speech alone is about 2%. Also: 11.66% of ears screened had confirmed hearing loss, mostly mild. Indian data point for checking the 10% TAM.
+- **[NIDCD Quick Statistics](https://www.nidcd.nih.gov/health/statistics/quick-statistics-voice-speech-language)**
+  US: speech sound disorders in young kids 8 to 9%. Any voice, speech, or language disorder: 10.8% at ages 3 to 6, 8.8% at ages 7 to 10.
+- **[Persistent speech sound disorder prevalence (PMC5280061)](https://pmc.ncbi.nlm.nih.gov/articles/PMC5280061/)**
+  Persistent speech sound disorder at age 8: 3.6%. More common in boys.
+
+## Existing solutions in India
+- **[1SpecialPlace](https://www.1specialplace.com/)**
+  Online speech therapy with human therapists since 2014. Multiple Indian languages. Teletherapy, not self-practice.
+- **[Gabify](https://yourstory.com/2025/04/startup-gabify-ai-speech-neurodevelopmental-care)** ([site](https://www.gabify.life/))
+  AI screening for Rs 499. A 100-session home therapy programme for Rs 50,000 (about Rs 500 per session). Also a practice-management tool for therapists. Screens autism, ADHD, and speech. Useful price anchor.
+- **[Omli Kids](https://omli.in/blog/omli-kids-faq)**
+  India. Ages 3 to 10. Voice-first stories to build speaking skills. States it is not a speech therapy tool. Same wellness framing as Mira. Closest positioning threat.
+- **[Iyaso / Eloquent](https://www.ptinews.com/press-release/iyaso-launches-eloquent-ai-powered-speech-therapy-app-to-help-people-who-stutter-speak-with-confidence/3202032)**
+  Pune. AI app for stuttering. Raised about USD 500K. Not a direct competitor (stuttering, not sound errors).
+- **[Sounderic](https://www.sounderic.com/)**
+  Marketplace for online speech therapists in India.
+
+## Global AI articulation apps for kids
+- **[Is AI Ready to Support Speech Therapy for Children? (Shi et al., 2025, IDC)](https://dl.acm.org/doi/10.1145/3713043.3728841)**
+  Review of 21 AI speech therapy apps for kids. 16 used speech recognition. Only 5 gave explicit accuracy feedback. 10 claimed clinical efficacy, none showed clinical study evidence. Off-the-shelf speech models perform poorly on kids. Only 6 claimed COPPA compliance. Key evidence that validated accuracy is an open gap.
+- **[Sara](https://saraspeech.com/)**
+  AI articulation practice for kids. 23-sound curriculum. SLP-designed.
+- **[SpeechLP](https://speechlp.com/)**
+  AI articulation games for ages 3 to 9. Links to an SLP platform for assigning home practice.
+- **[Little Words](https://littlewords.ai/ai-speech-therapy-app)**
+  AI speech practice for ages 2 to 8.
+
+## Kids and speech AI accuracy
+- **[The Learning Agency: Closing the Child Speech Recognition Gap](https://the-learning-agency.com/guides-resources/closing-the-child-speech-recognition-gap-evidence-limitations-and-paths-forward/)**
+  Speech models: 15 to 21% word error rate on kids aged 6 to 10, up to 35% on kids aged 4 to 6. Ages 4 to 7 have the highest error rates.
+- **[Kid-Whisper (arXiv 2309.07927)](https://www.alphaxiv.org/abs/2309.07927)**
+  Whisper: 2.82% word error rate on adults, 12.8% to over 50% on kids depending on the dataset.
+
+## Age norms
+- **[Crowe and McLeod (2020), Children's English Consonant Acquisition in the United States, AJSLP](https://pubs.asha.org/doi/10.1044/2020_AJSLP-19-00168)**
+  90% criterion: /s/, /z/, /sh/, /l/, /ch/, /j/, /v/ acquired at 4;0 to 4;11. /r/, /th/ (voiced), /zh/ at 5;0 to 5;11. /th/ (voiceless) at 6;0 to 6;11. /r/ has the widest spread: 30 to 96 months. So many errors at age 4 are normal.
+
+## Screen time
+- **[Indian Academy of Pediatrics screen time guidelines (2022)](https://pubmed.ncbi.nlm.nih.gov/34969943/)**
+  Ages 2 to 5: at most 1 hour a day of supervised screen time. Ages 5 to 10: under 2 hours a day.
+
+## Children's data law
+- **[Lexology: DPDP Act and children's data](https://www.lexology.com/library/detail.aspx?g=db399a1b-010b-4b23-b628-7710e8f5ae21)**
+  Verifiable parental consent for anyone under 18. Section 9(3) bans tracking, behavioural monitoring, and targeted ads aimed at children, whatever the consent. Penalty up to Rs 200 Cr.
+- **[DPDP Rules 2025, Fourth Schedule](https://www.dpdpa.com/schedule/schedule4.html)** ([summary](https://consiva.ai/industry/healthcare))
+  Exempts clinical establishments and healthcare professionals, only for health services to the child. A wellness app likely does not get this exemption. Needs a lawyer's read.
+
+## Child speech datasets
+- **[NITK Kids' Speech Corpus (Interspeech 2019)](https://www.isca-archive.org/interspeech_2019/ramteke19_interspeech.pdf)**
+  Indian kids aged 2.5 to 6.5. Kannada and English. About 10 hours, 160 kids. Availability not stated. Contact the authors.
+- **[NNCES on Kaggle](https://www.kaggle.com/datasets/kodaliradha20phd7093/nonnative-children-english-speech-nnces-corpus)**
+  50 Indian kids aged 8 to 12. Telugu first language.
+- **[HiACC: Hinglish adult and children corpus (PMC12329218)](https://pmc.ncbi.nlm.nih.gov/articles/PMC12329218/)**
+  Hindi-English code-switched speech. Includes kids from a Dehradun government school.
+- **[JIBO Kids Corpus (2024)](http://www.seas.ucla.edu/spapl/paper/jibo_kids.pdf)**
+  110 US kids aged 4 to 7. Public. Also names PERCEPT-R: 281 kids with and without /r/ errors, useful for /r/.
+
 ---
 
 ## Change log
 - **v1 (29 Sep 2026):** First version. 14 sources across 6 topics.
+- **v1.1 (29 Sep 2026):** Added 23 sources from the direction check: prevalence, Indian competitors, global AI apps, child speech AI accuracy, age norms, screen time, DPDP children's data, and child speech datasets.
